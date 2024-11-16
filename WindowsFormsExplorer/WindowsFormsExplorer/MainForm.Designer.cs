@@ -5,7 +5,6 @@ namespace WindowsFormsExplorer
 {
     public partial class MainForm : Form
     {
-        private TextBox txtPID;
         private Button btnConnect;
         private Button btnRefresh;
         private ListView listViewForms;
@@ -15,7 +14,6 @@ namespace WindowsFormsExplorer
 
         private void InitializeComponent()
         {
-            this.txtPID = new System.Windows.Forms.TextBox();
             this.btnConnect = new System.Windows.Forms.Button();
             this.btnRefresh = new System.Windows.Forms.Button();
             this.splitContainer = new System.Windows.Forms.SplitContainer();
@@ -29,16 +27,9 @@ namespace WindowsFormsExplorer
             this.controlsPanel.SuspendLayout();
             this.SuspendLayout();
             // 
-            // txtPID
-            // 
-            this.txtPID.Location = new System.Drawing.Point(12, 12);
-            this.txtPID.Name = "txtPID";
-            this.txtPID.Size = new System.Drawing.Size(100, 20);
-            this.txtPID.TabIndex = 0;
-            // 
             // btnConnect
             // 
-            this.btnConnect.Location = new System.Drawing.Point(118, 10);
+            this.btnConnect.Location = new System.Drawing.Point(10, 10);
             this.btnConnect.Name = "btnConnect";
             this.btnConnect.Size = new System.Drawing.Size(75, 23);
             this.btnConnect.TabIndex = 1;
@@ -47,7 +38,7 @@ namespace WindowsFormsExplorer
             // 
             // btnRefresh
             // 
-            this.btnRefresh.Location = new System.Drawing.Point(199, 10);
+            this.btnRefresh.Location = new System.Drawing.Point(91, 10);
             this.btnRefresh.Name = "btnRefresh";
             this.btnRefresh.Size = new System.Drawing.Size(75, 23);
             this.btnRefresh.TabIndex = 2;
@@ -95,7 +86,6 @@ namespace WindowsFormsExplorer
             // 
             // controlsPanel
             // 
-            this.controlsPanel.Controls.Add(this.txtPID);
             this.controlsPanel.Controls.Add(this.btnConnect);
             this.controlsPanel.Controls.Add(this.btnRefresh);
             this.controlsPanel.Dock = System.Windows.Forms.DockStyle.Top;
@@ -112,14 +102,12 @@ namespace WindowsFormsExplorer
             this.Name = "MainForm";
             this.StartPosition = System.Windows.Forms.FormStartPosition.CenterScreen;
             this.Text = "Form Inspector";
-            this.WindowState = System.Windows.Forms.FormWindowState.Maximized;
             this.Load += new System.EventHandler(this.MainForm_Load);
             this.splitContainer.Panel1.ResumeLayout(false);
             this.splitContainer.Panel2.ResumeLayout(false);
             ((System.ComponentModel.ISupportInitialize)(this.splitContainer)).EndInit();
             this.splitContainer.ResumeLayout(false);
             this.controlsPanel.ResumeLayout(false);
-            this.controlsPanel.PerformLayout();
             this.ResumeLayout(false);
 
         }

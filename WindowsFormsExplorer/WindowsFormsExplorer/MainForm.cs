@@ -16,8 +16,6 @@ namespace WindowsFormsExplorer
         {
             InitializeComponent();
 
-            this.txtPID.Text = "11708";
-
             //non so perchè ma il designer le rimuove
             this.listViewForms.Columns.Add("Name", 150);
             this.listViewForms.Columns.Add("Type", 200);
@@ -44,13 +42,8 @@ namespace WindowsFormsExplorer
         {
             try
             {
-                if (!int.TryParse(txtPID.Text, out int pid))
-                {
-                    MessageBox.Show("Error", "Invald PID!", MessageBoxButtons.OK, MessageBoxIcon.Error);
-                    return;
-                }
 
-                ConnectToProcess(pid);
+                ConnectToProcess();
                 RefreshOpenForms();
             }
             catch (Exception ex)
@@ -60,11 +53,10 @@ namespace WindowsFormsExplorer
         }
 
 
-        private void ConnectToProcess(int pid)
+        private void ConnectToProcess()
         {
             try
             {
-                targetProcess = System.Diagnostics.Process.GetProcessById(pid);
 
                 // Enumerare tutte le istanze di Visual Studio attive
                 List<EnvDTE80.DTE2> visualStudioInstances = GetRunningVisualStudioInstances();
@@ -86,11 +78,55 @@ namespace WindowsFormsExplorer
 
                 dte = selectedDTE;
 
+                List<string> processInfoList = new List<string>();
+                foreach (EnvDTE80.Process2 proc in dte.Debugger.DebuggedProcesses)
+                {
+                    processInfoList.Add($"PID: {proc.ProcessID} - Name: {proc.Name}");
+                }
+
+                if (processInfoList.Count == 0)
+                {
+                    MessageBox.Show("Warning", "No debug processes found in the selected instance.", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                    return;
+                }
+
+                int selectedPID = 0;
+
+                using (Form form = new Form())
+                {
+                    ListBox listBox = new ListBox();
+                    listBox.Items.AddRange(processInfoList.ToArray());
+                    listBox.Dock = DockStyle.Fill;
+                    form.Controls.Add(listBox);
+                    form.Text = "Select a process in debug";
+                    form.ClientSize = new System.Drawing.Size(400, 300);
+
+                    Button okButton = new Button() { Text = "OK", DialogResult = DialogResult.OK, Dock = DockStyle.Bottom };
+                    form.Controls.Add(okButton);
+                    form.AcceptButton = okButton;
+
+                    if (form.ShowDialog() == DialogResult.OK && listBox.SelectedIndex >= 0)
+                    {
+                        // Estrai il PID selezionato dall'utente
+                        string selectedProcessInfo = listBox.SelectedItem.ToString();
+                        selectedPID = int.Parse(selectedProcessInfo.Split(' ')[1]); // Estrarre il PID
+
+                        targetProcess = System.Diagnostics.Process.GetProcessById(selectedPID);
+                    }
+                }
+
+                if (selectedPID <= 0)
+                {
+                    MessageBox.Show("Warning", "Invalid PID.", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                    return;
+                }
+
+
                 // Verifica che il processo sia in debug
                 bool isDebugging = false;
                 foreach (EnvDTE80.Process2 proc in dte.Debugger.DebuggedProcesses)
                 {
-                    if (proc.ProcessID == pid)
+                    if (proc.ProcessID == selectedPID)
                     {
                         isDebugging = true;
                         break;
