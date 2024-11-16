@@ -9,7 +9,7 @@ namespace WindowsFormsExplorer
 {
     public partial class MainForm : Form
     {
-        private DTE2 debuggerInstance;
+        private EnvDTE80.DTE2 dte;
         private System.Diagnostics.Process targetProcess;
 
 
@@ -26,6 +26,8 @@ namespace WindowsFormsExplorer
 
         private void btnConnect_Click(object sender, EventArgs e)
         {
+            MessageFilter.Register();
+
             try
             {
                 if (!int.TryParse(txtPID.Text, out int pid))
@@ -41,46 +43,56 @@ namespace WindowsFormsExplorer
             {
                 MessageBox.Show($"Errore durante la connessione: {ex.Message}");
             }
+            finally
+            {
+                MessageFilter.Revoke();
+            }
         }
 
 
         private void ConnectToProcess(int pid)
         {
-            // Ottiene il processo target
-            targetProcess = System.Diagnostics.Process.GetProcessById(pid);
-
-            if (targetProcess == null)
+            try
             {
-                throw new Exception("Processo non trovato!");
-            }
+                // Ottiene il processo target
+                targetProcess = System.Diagnostics.Process.GetProcessById(pid);
 
-            // Ottiene l'istanza del debugger
-            //string progID = "VisualStudio.DTE.15.0"; // Visual studio 2017
-            //string progID = "VisualStudio.DTE.16.0"; // Visual studio 2019
-            string progID = "VisualStudio.DTE.17.0"; // Visual studio 2022
-
-            object obj = Marshal.GetActiveObject(progID);
-            debuggerInstance = obj as DTE2;
-
-            if (debuggerInstance == null)
-            {
-                throw new Exception("Impossibile connettersi al debugger!");
-            }
-
-            // Verifica che il processo sia in debug
-            bool isDebugging = false;
-            foreach (Process2 proc in debuggerInstance.Debugger.DebuggedProcesses)
-            {
-                if (proc.ProcessID == pid)
+                if (targetProcess == null)
                 {
-                    isDebugging = true;
-                    break;
+                    throw new Exception("Processo non trovato!");
+                }
+
+                // Ottiene l'istanza del debugger
+                //string progID = "VisualStudio.DTE.15.0"; // Visual studio 2017
+                //string progID = "VisualStudio.DTE.16.0"; // Visual studio 2019
+                string progID = "VisualStudio.DTE.17.0"; // Visual studio 2022
+                object obj = Marshal.GetActiveObject(progID);
+                dte = obj as DTE2;
+
+                if (dte == null)
+                {
+                    throw new Exception("Impossibile connettersi al debugger!");
+                }
+
+                // Verifica che il processo sia in debug
+                bool isDebugging = false;
+                foreach (Process2 proc in dte.Debugger.DebuggedProcesses)
+                {
+                    if (proc.ProcessID == pid)
+                    {
+                        isDebugging = true;
+                        break;
+                    }
+                }
+
+                if (!isDebugging)
+                {
+                    throw new Exception("Il processo specificato non è in modalità debug!");
                 }
             }
-
-            if (!isDebugging)
+            catch (COMException ex)
             {
-                throw new Exception("Il processo specificato non è in modalità debug!");
+                MessageBox.Show("Errore durante la connessione al debugger: " + ex.Message);
             }
         }
 
@@ -93,7 +105,7 @@ namespace WindowsFormsExplorer
             {
                 // Ottieni il processo debuggato corretto
                 EnvDTE.Process debuggedProcess = null;
-                foreach (EnvDTE.Process proc in debuggerInstance.Debugger.DebuggedProcesses)
+                foreach (EnvDTE.Process proc in dte.Debugger.DebuggedProcesses)
                 {
                     if (proc.ProcessID == targetProcess.Id)
                     {
@@ -121,7 +133,7 @@ namespace WindowsFormsExplorer
                     EnvDTE.Process mainThread = threads.Item(1);
 
                     // Il debugger deve essere in pausa
-                    if (debuggerInstance.Debugger.CurrentMode != dbgDebugMode.dbgBreakMode)
+                    if (dte.Debugger.CurrentMode != dbgDebugMode.dbgBreakMode)
                     {
                         throw new Exception("Il debugger deve essere in modalità break!");
                     }
@@ -144,7 +156,7 @@ namespace WindowsFormsExplorer
                     {
                         string baseExpr = $"System.Windows.Forms.Application.OpenForms[{i}]";
 
-                        Expression formExpr = debuggerInstance.Debugger.GetExpression(baseExpr);
+                        Expression formExpr = dte.Debugger.GetExpression(baseExpr);
                         if (formExpr == null)
                         {
                             continue;
@@ -195,7 +207,7 @@ namespace WindowsFormsExplorer
             try
             {
                 string baseExpr = $"System.Windows.Forms.Application.OpenForms[{formIndex}]";
-                Expression formExpr = debuggerInstance.Debugger.GetExpression(baseExpr);
+                Expression formExpr = dte.Debugger.GetExpression(baseExpr);
 
                 if (formExpr != null)
                 {
@@ -221,7 +233,7 @@ namespace WindowsFormsExplorer
             try
             {
                 // Ottieni la collezione Controls
-                Expression controlsExpr = debuggerInstance.Debugger.GetExpression(
+                Expression controlsExpr = dte.Debugger.GetExpression(
                     $"{controlExpr}.Controls",
                     false,
                     30000
@@ -230,7 +242,7 @@ namespace WindowsFormsExplorer
                 if (controlsExpr != null)
                 {
                     // Ottieni il conteggio dei controlli
-                    Expression countExpr = debuggerInstance.Debugger.GetExpression(
+                    Expression countExpr = dte.Debugger.GetExpression(
                         $"{controlExpr}.Controls.Count",
                         false,
                         30000
@@ -265,7 +277,7 @@ namespace WindowsFormsExplorer
                             };
 
                             // Aggiungi proprietà aggiuntive
-                            //AddControlProperties(childExpr, node);
+                            AddControlProperties(childExpr, node);
 
                             // Ricorsione sui controlli figli
                             ExploreControlsRecursively(childExpr, node);
@@ -353,7 +365,7 @@ namespace WindowsFormsExplorer
             {
                 try
                 {
-                    Expression expr = debuggerInstance.Debugger.GetExpression(expression, false, 300000);
+                    Expression expr = dte.Debugger.GetExpression(expression, false, 300000);
                     return expr?.Value;
                 }
                 catch (COMException ex) when ((uint)ex.HResult == 0x80010001) // RPC_E_CALL_REJECTED
@@ -390,11 +402,13 @@ namespace WindowsFormsExplorer
         {
             base.OnFormClosing(e);
 
-            if (debuggerInstance != null)
+            if (dte != null)
             {
-                Marshal.ReleaseComObject(debuggerInstance);
+                Marshal.ReleaseComObject(dte);
+                dte = null; 
             }
         }
+
 
 
 
