@@ -109,28 +109,47 @@ namespace WindowsFormsExplorer
         }
 
 
+        /// <summary>
+        /// Questo metodo restituisce una lista di tutte le istanze di Visual Studio attualmente in esecuzione
+        /// utilizzando la Running Object Table (ROT) e la COM API per interagire con i processi attivi.
+        /// L'idea è di trovare tutte le istanze di Visual Studio in esecuzione e restituirle come una lista.
+        /// </summary>
         private List<EnvDTE80.DTE2> GetRunningVisualStudioInstances()
         {
             List<EnvDTE80.DTE2> instances = new List<EnvDTE80.DTE2>();
 
+            // Ottiene la Running Object Table (ROT), che è un oggetto COM che permette di ottenere informazioni
+            // sui processi in esecuzione registrati.
             GetRunningObjectTable(0, out IRunningObjectTable rot);
-            rot.EnumRunning(out IEnumMoniker enumMoniker);
-            enumMoniker.Reset();
+            rot.EnumRunning(out IEnumMoniker enumMoniker);  // Ottiene un enumeratore per gli oggetti in esecuzione
+            enumMoniker.Reset();  // Reset dell'enumeratore per partire dall'inizio
 
+            // Crea un array di moniker per raccogliere informazioni sugli oggetti
+            // Adifferenza di un semplice puntatore o riferimento a un oggetto in memoria,
+            // un moniker non si limita a fare riferimento alla memoria di un processo in corso,
+            // ma può essere utilizzato per localizzare l'oggetto anche se si trova in un altro contesto,
+            // come un altro processo, una rete o un file.
             IMoniker[] monikers = new IMoniker[1];
             IntPtr fetched = IntPtr.Zero;
+
+            // Enumerazione degli oggetti nella ROT
             while (enumMoniker.Next(1, monikers, fetched) == 0)
             {
+                // Crea un contesto di binding per ogni moniker
                 CreateBindCtx(0, out IBindCtx bindCtx);
-                monikers[0].GetDisplayName(bindCtx, null, out string displayName);
+                monikers[0].GetDisplayName(bindCtx, null, out string displayName);  // Ottiene il nome visualizzabile del moniker
 
-                if (displayName.StartsWith("!VisualStudio.DTE"))
+                // Verifica se il nome del moniker corrisponde a un'istanza di Visual Studio
+                if (!displayName.StartsWith("!VisualStudio.DTE"))
                 {
-                    rot.GetObject(monikers[0], out object obj);
-                    if (obj is EnvDTE80.DTE2 dte)
-                    {
-                        instances.Add(dte);
-                    }
+                    continue;
+                }
+
+                // Recupera l'oggetto associato al moniker
+                rot.GetObject(monikers[0], out object obj);
+                if (obj is EnvDTE80.DTE2 dte)  // Se l'oggetto è un'istanza di Visual Studio (DTE2), lo aggiunge alla lista
+                {
+                    instances.Add(dte);
                 }
             }
 
@@ -138,6 +157,11 @@ namespace WindowsFormsExplorer
         }
 
 
+        /// <summary>
+        /// Questo metodo visualizza una finestra di dialogo per permettere all'utente di scegliere
+        /// quale istanza di Visual Studio connessa desidera utilizzare, tra quelle attualmente in esecuzione.
+        /// La lista delle istanze viene passata come parametro alla funzione.
+        /// </summary>
         private EnvDTE80.DTE2 ChooseVisualStudioInstance(List<EnvDTE80.DTE2> instances)
         {
             string[] instanceNames = new string[instances.Count];
