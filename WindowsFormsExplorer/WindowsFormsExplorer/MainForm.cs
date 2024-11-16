@@ -55,7 +55,10 @@ namespace WindowsFormsExplorer
             }
 
             // Ottiene l'istanza del debugger
-            string progID = "VisualStudio.DTE.17.0"; // Modificare in base alla versione di VS
+            //string progID = "VisualStudio.DTE.15.0"; // Visual studio 2017
+            //string progID = "VisualStudio.DTE.16.0"; // Visual studio 2019
+            string progID = "VisualStudio.DTE.17.0"; // Visual studio 2022
+
             object obj = Marshal.GetActiveObject(progID);
             debuggerInstance = obj as DTE2;
 
