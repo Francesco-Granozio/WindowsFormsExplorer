@@ -12,7 +12,6 @@ namespace WindowsFormsExplorer
         private System.Diagnostics.Process targetProcess;
 
 
-
         public MainForm()
         {
             InitializeComponent();
@@ -20,10 +19,10 @@ namespace WindowsFormsExplorer
             this.txtPID.Text = "11708";
 
             //non so perchè ma il designer le rimuove
-            this.listViewForms.Columns.Add("Nome", 150);
-            this.listViewForms.Columns.Add("Tipo", 200);
-            this.listViewForms.Columns.Add("Testo", 200);
-            this.listViewForms.Columns.Add("Visibile", 100);
+            this.listViewForms.Columns.Add("Name", 150);
+            this.listViewForms.Columns.Add("Type", 200);
+            this.listViewForms.Columns.Add("Text", 200);
+            this.listViewForms.Columns.Add("Visible", 100);
             this.listViewForms.Columns.Add("Handle", 100);
         }
 
@@ -43,12 +42,11 @@ namespace WindowsFormsExplorer
 
         private void btnConnect_Click(object sender, EventArgs e)
         {
-
             try
             {
                 if (!int.TryParse(txtPID.Text, out int pid))
                 {
-                    MessageBox.Show("PID non valido!");
+                    MessageBox.Show("Error", "Invald PID!", MessageBoxButtons.OK, MessageBoxIcon.Error);
                     return;
                 }
 
@@ -57,7 +55,7 @@ namespace WindowsFormsExplorer
             }
             catch (Exception ex)
             {
-                MessageBox.Show($"Errore durante la connessione: {ex.Message}");
+                MessageBox.Show("Error", $"Error while connecting to debugger: {ex.Message}", MessageBoxButtons.OK, MessageBoxIcon.Error);
             }
         }
 
@@ -73,7 +71,7 @@ namespace WindowsFormsExplorer
 
                 if (visualStudioInstances.Count == 0)
                 {
-                    MessageBox.Show("Nessuna istanza di Visual Studio trovata.");
+                    MessageBox.Show("Warning", "No Visual Studio instance found.", MessageBoxButtons.OK, MessageBoxIcon.Warning);
                     return;
                 }
 
@@ -82,7 +80,7 @@ namespace WindowsFormsExplorer
 
                 if (selectedDTE == null)
                 {
-                    MessageBox.Show("Nessuna istanza selezionata.");
+                    MessageBox.Show("Warning", "No instance selected.", MessageBoxButtons.OK, MessageBoxIcon.Warning);
                     return;
                 }
 
@@ -101,14 +99,15 @@ namespace WindowsFormsExplorer
 
                 if (!isDebugging)
                 {
-                    throw new Exception("Il processo specificato non è in modalità debug!");
+                    throw new Exception("Selected process MUST be in debug mode!");
                 }
             }
             catch (COMException ex)
             {
-                MessageBox.Show("Errore durante la connessione al debugger: " + ex.Message);
+                MessageBox.Show("Error", $"Error while connecting to debugger: {ex.Message}", MessageBoxButtons.OK, MessageBoxIcon.Error);
             }
         }
+
 
         private List<EnvDTE80.DTE2> GetRunningVisualStudioInstances()
         {
@@ -138,12 +137,13 @@ namespace WindowsFormsExplorer
             return instances;
         }
 
+
         private EnvDTE80.DTE2 ChooseVisualStudioInstance(List<EnvDTE80.DTE2> instances)
         {
             string[] instanceNames = new string[instances.Count];
             for (int i = 0; i < instances.Count; i++)
             {
-                instanceNames[i] = $"Instance {i + 1}: {instances[i].Solution?.FullName ?? "Senza soluzione aperta"}";
+                instanceNames[i] = $"Instance {i + 1}: {instances[i].Solution?.FullName ?? "Without open solution (.sln)"}";
             }
 
             using (Form form = new Form())
@@ -152,7 +152,7 @@ namespace WindowsFormsExplorer
                 listBox.Items.AddRange(instanceNames);
                 listBox.Dock = DockStyle.Fill;
                 form.Controls.Add(listBox);
-                form.Text = "Seleziona un'istanza di Visual Studio";
+                form.Text = "Select an instance of Visual Studio";
                 form.ClientSize = new System.Drawing.Size(400, 300);
 
                 Button okButton = new Button() { Text = "OK", DialogResult = DialogResult.OK, Dock = DockStyle.Bottom };
@@ -188,7 +188,8 @@ namespace WindowsFormsExplorer
 
                 if (debuggedProcess == null)
                 {
-                    throw new Exception("Processo debuggato non trovato!");
+                    MessageBox.Show("Warning", "Debugged process not found!", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                    return;
                 }
 
                 // Accedo alla collezione threads in modo sicuro
@@ -198,7 +199,8 @@ namespace WindowsFormsExplorer
                     EnvDTE.Processes threads = debuggedProcess.Collection;
                     if (threads.Count <= 0)
                     {
-                        throw new Exception("Nessun thread disponibile nel processo!");
+                        MessageBox.Show("Warning", "No threads available in the process!", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                        return;
                     }
 
                     // Seleziona il primo thread
@@ -207,21 +209,23 @@ namespace WindowsFormsExplorer
                     // Il debugger deve essere in pausa
                     if (dte.Debugger.CurrentMode != EnvDTE.dbgDebugMode.dbgBreakMode)
                     {
-                        throw new Exception("Il debugger deve essere in modalità break!");
+                        MessageBox.Show("Warning", "The debugger MUST be in pause (break) mode!", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                        return;
                     }
-
 
                     string formCountStr = GetExpressionValue("System.Windows.Forms.Application.OpenForms.Count");
 
 
                     if (string.IsNullOrEmpty(formCountStr))
                     {
-                        throw new Exception("Impossibile ottenere il conteggio dei forms!");
+                        MessageBox.Show("Warning", "Unable to get form count!", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                        return;
                     }
 
                     if (!int.TryParse(formCountStr, out int formCount))
                     {
-                        throw new Exception($"Valore conteggio non valido: {formCountStr}");
+                        MessageBox.Show("Warning", $"Invalid count value: {formCountStr}", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                        return;
                     }
 
                     for (int i = 0; i < formCount; i++)
@@ -252,12 +256,13 @@ namespace WindowsFormsExplorer
                 }
                 catch (Exception ex)
                 {
-                    throw new Exception($"Errore nell'accesso ai threads: {ex.Message}");
+                    MessageBox.Show("Error", $"Error in accessing threads: {ex.Message}", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                    return;
                 }
             }
             catch (Exception ex)
             {
-                MessageBox.Show($"Errore durante la lettura dei forms: {ex.Message}\n{ex.StackTrace}");
+                MessageBox.Show("Error", $"Error while reading forms: {ex.Message}", MessageBoxButtons.OK, MessageBoxIcon.Error);
             }
         }
 
@@ -298,7 +303,7 @@ namespace WindowsFormsExplorer
             }
             catch (Exception ex)
             {
-                MessageBox.Show($"Errore durante l'esplorazione dei controlli: {ex.Message}");
+                MessageBox.Show("Error", $"Error while exploring controls: {ex.Message}", MessageBoxButtons.OK, MessageBoxIcon.Error);
             }
             finally
             {
@@ -450,7 +455,7 @@ namespace WindowsFormsExplorer
                 {
                     if (i == retryCount - 1)
                     {
-                        Console.WriteLine($"Eccezione durante il recupero dell'espressione: {ex.Message}");
+                        Console.WriteLine($"Exception during expression fetching: {ex.Message}");
                         throw; // Rilancia l'eccezione se siamo all'ultimo tentativo
                     }
 
@@ -471,7 +476,7 @@ namespace WindowsFormsExplorer
             }
             catch (Exception ex)
             {
-                MessageBox.Show($"Errore durante l'aggiornamento: {ex.Message}");
+                MessageBox.Show("Error", $"Error while updating: {ex.Message}", MessageBoxButtons.OK, MessageBoxIcon.Error);
             }
         }
 
@@ -494,8 +499,6 @@ namespace WindowsFormsExplorer
 
             }
         }
-
-
 
 
     }
