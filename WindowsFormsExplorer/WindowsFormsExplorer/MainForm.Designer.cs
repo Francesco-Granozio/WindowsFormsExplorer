@@ -68,7 +68,7 @@ namespace WindowsFormsExplorer
             // 
             this.splitContainer.Panel2.Controls.Add(this.treeViewControls);
             this.splitContainer.Size = new System.Drawing.Size(1184, 716);
-            this.splitContainer.SplitterDistance = 592;
+            this.splitContainer.SplitterDistance = 441;
             this.splitContainer.TabIndex = 0;
             // 
             // listViewForms
@@ -79,24 +79,18 @@ namespace WindowsFormsExplorer
             this.listViewForms.HideSelection = false;
             this.listViewForms.Location = new System.Drawing.Point(0, 0);
             this.listViewForms.Name = "listViewForms";
-            this.listViewForms.Size = new System.Drawing.Size(592, 716);
+            this.listViewForms.Size = new System.Drawing.Size(441, 716);
             this.listViewForms.TabIndex = 0;
             this.listViewForms.UseCompatibleStateImageBehavior = false;
             this.listViewForms.View = System.Windows.Forms.View.Details;
             this.listViewForms.SelectedIndexChanged += new System.EventHandler(this.listViewForms_SelectedIndexChanged);
-            this.listViewForms.Columns.Add("Nome", 150);
-            this.listViewForms.Columns.Add("Tipo", 200);
-            this.listViewForms.Columns.Add("Testo", 200);
-            this.listViewForms.Columns.Add("Visibile", 100);
-            this.listViewForms.Columns.Add("Handle", 100);
-
             // 
             // treeViewControls
             // 
             this.treeViewControls.Dock = System.Windows.Forms.DockStyle.Fill;
             this.treeViewControls.Location = new System.Drawing.Point(0, 0);
             this.treeViewControls.Name = "treeViewControls";
-            this.treeViewControls.Size = new System.Drawing.Size(588, 716);
+            this.treeViewControls.Size = new System.Drawing.Size(739, 716);
             this.treeViewControls.TabIndex = 0;
             // 
             // controlsPanel
@@ -118,6 +112,7 @@ namespace WindowsFormsExplorer
             this.Name = "MainForm";
             this.StartPosition = System.Windows.Forms.FormStartPosition.CenterScreen;
             this.Text = "Form Inspector";
+            this.WindowState = System.Windows.Forms.FormWindowState.Maximized;
             this.Load += new System.EventHandler(this.MainForm_Load);
             this.splitContainer.Panel1.ResumeLayout(false);
             this.splitContainer.Panel2.ResumeLayout(false);

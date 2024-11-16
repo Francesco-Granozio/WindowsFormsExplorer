@@ -1,8 +1,5 @@
-﻿using EnvDTE;
-using EnvDTE80;
-using System;
+﻿using System;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.Runtime.InteropServices;
 using System.Runtime.InteropServices.ComTypes;
 using System.Windows.Forms;
@@ -19,6 +16,15 @@ namespace WindowsFormsExplorer
         public MainForm()
         {
             InitializeComponent();
+
+            this.txtPID.Text = "11708";
+
+            //non so perchè ma il designer le rimuove
+            this.listViewForms.Columns.Add("Nome", 150);
+            this.listViewForms.Columns.Add("Tipo", 200);
+            this.listViewForms.Columns.Add("Testo", 200);
+            this.listViewForms.Columns.Add("Visibile", 100);
+            this.listViewForms.Columns.Add("Handle", 100);
         }
 
 
@@ -63,7 +69,7 @@ namespace WindowsFormsExplorer
                 targetProcess = System.Diagnostics.Process.GetProcessById(pid);
 
                 // Enumerare tutte le istanze di Visual Studio attive
-                List<DTE2> visualStudioInstances = GetRunningVisualStudioInstances();
+                List<EnvDTE80.DTE2> visualStudioInstances = GetRunningVisualStudioInstances();
 
                 if (visualStudioInstances.Count == 0)
                 {
@@ -72,7 +78,7 @@ namespace WindowsFormsExplorer
                 }
 
                 // Mostrare una finestra di dialogo per scegliere l'istanza
-                DTE2 selectedDTE = ChooseVisualStudioInstance(visualStudioInstances);
+                EnvDTE80.DTE2 selectedDTE = ChooseVisualStudioInstance(visualStudioInstances);
 
                 if (selectedDTE == null)
                 {
@@ -84,7 +90,7 @@ namespace WindowsFormsExplorer
 
                 // Verifica che il processo sia in debug
                 bool isDebugging = false;
-                foreach (Process2 proc in dte.Debugger.DebuggedProcesses)
+                foreach (EnvDTE80.Process2 proc in dte.Debugger.DebuggedProcesses)
                 {
                     if (proc.ProcessID == pid)
                     {
@@ -104,9 +110,9 @@ namespace WindowsFormsExplorer
             }
         }
 
-        private List<DTE2> GetRunningVisualStudioInstances()
+        private List<EnvDTE80.DTE2> GetRunningVisualStudioInstances()
         {
-            List<DTE2> instances = new List<DTE2>();
+            List<EnvDTE80.DTE2> instances = new List<EnvDTE80.DTE2>();
 
             GetRunningObjectTable(0, out IRunningObjectTable rot);
             rot.EnumRunning(out IEnumMoniker enumMoniker);
@@ -116,14 +122,13 @@ namespace WindowsFormsExplorer
             IntPtr fetched = IntPtr.Zero;
             while (enumMoniker.Next(1, monikers, fetched) == 0)
             {
-                IBindCtx bindCtx;
-                CreateBindCtx(0, out bindCtx);
+                CreateBindCtx(0, out IBindCtx bindCtx);
                 monikers[0].GetDisplayName(bindCtx, null, out string displayName);
 
                 if (displayName.StartsWith("!VisualStudio.DTE"))
                 {
                     rot.GetObject(monikers[0], out object obj);
-                    if (obj is DTE2 dte)
+                    if (obj is EnvDTE80.DTE2 dte)
                     {
                         instances.Add(dte);
                     }
@@ -133,7 +138,7 @@ namespace WindowsFormsExplorer
             return instances;
         }
 
-        private DTE2 ChooseVisualStudioInstance(List<DTE2> instances)
+        private EnvDTE80.DTE2 ChooseVisualStudioInstance(List<EnvDTE80.DTE2> instances)
         {
             string[] instanceNames = new string[instances.Count];
             for (int i = 0; i < instances.Count; i++)
@@ -190,7 +195,7 @@ namespace WindowsFormsExplorer
                 try
                 {
                     // Seleziono il primo thread disponibile
-                    Processes threads = debuggedProcess.Collection;
+                    EnvDTE.Processes threads = debuggedProcess.Collection;
                     if (threads.Count <= 0)
                     {
                         throw new Exception("Nessun thread disponibile nel processo!");
@@ -200,7 +205,7 @@ namespace WindowsFormsExplorer
                     EnvDTE.Process mainThread = threads.Item(1);
 
                     // Il debugger deve essere in pausa
-                    if (dte.Debugger.CurrentMode != dbgDebugMode.dbgBreakMode)
+                    if (dte.Debugger.CurrentMode != EnvDTE.dbgDebugMode.dbgBreakMode)
                     {
                         throw new Exception("Il debugger deve essere in modalità break!");
                     }
@@ -223,7 +228,7 @@ namespace WindowsFormsExplorer
                     {
                         string baseExpr = $"System.Windows.Forms.Application.OpenForms[{i}]";
 
-                        Expression formExpr = dte.Debugger.GetExpression(baseExpr);
+                        EnvDTE.Expression formExpr = dte.Debugger.GetExpression(baseExpr);
                         if (formExpr == null)
                         {
                             continue;
@@ -259,11 +264,13 @@ namespace WindowsFormsExplorer
 
         private void listViewForms_SelectedIndexChanged(object sender, EventArgs e)
         {
-            if (listViewForms.SelectedItems.Count > 0)
+            if (listViewForms.SelectedItems.Count <= 0)
             {
-                int formIndex = listViewForms.SelectedItems[0].Index;
-                ExploreFormControls(formIndex);
+                return;
             }
+
+            int formIndex = listViewForms.SelectedItems[0].Index;
+            ExploreFormControls(formIndex);
         }
 
 
@@ -276,7 +283,7 @@ namespace WindowsFormsExplorer
             try
             {
                 string baseExpr = $"System.Windows.Forms.Application.OpenForms[{formIndex}]";
-                Expression formExpr = dte.Debugger.GetExpression(baseExpr);
+                EnvDTE.Expression formExpr = dte.Debugger.GetExpression(baseExpr);
 
                 if (formExpr != null)
                 {
@@ -305,59 +312,56 @@ namespace WindowsFormsExplorer
 
             try
             {
-                // Ottieni la collezione Controls
-                Expression controlsExpr = dte.Debugger.GetExpression(
-                    $"{controlExpr}.Controls",
-                    false,
-                    30000
-                );
+                // Ottengo la collezione Controls
+                string controlsStr = GetExpressionValue($"{controlExpr}.Controls");
 
-                if (controlsExpr != null)
+                if (controlsStr == null)
                 {
-                    // Ottieni il conteggio dei controlli
-                    Expression countExpr = dte.Debugger.GetExpression(
-                        $"{controlExpr}.Controls.Count",
-                        false,
-                        30000
-                    );
+                    return;
+                }
 
-                    if (countExpr != null && int.TryParse(countExpr.Value, out int controlCount))
+                // Ottengo il Count dei controlli
+                string controlCountStr = GetExpressionValue($"{controlExpr}.Controls.Count");
+
+                if (!int.TryParse(controlCountStr, out int controlCount))
+                {
+                    return;
+                }
+
+                for (int i = 0; i < controlCount; i++)
+                {
+                    string childExpr = $"{controlExpr}.Controls[{i}]";
+
+                    // Ottengo informazioni sul controllo
+                    string name = GetExpressionValue($"{childExpr}.Name") ?? $"Control_{i}";
+                    string type = GetExpressionValue($"{childExpr}.GetType().Name") ?? "Unknown";
+                    string text = GetExpressionValue($"{childExpr}.Text") ?? "";
+                    bool visible = GetExpressionValue($"{childExpr}.Visible") == "true";
+
+                    // Creo il nodo per questo controllo
+                    string nodeText = $"{name} ({type})";
+
+                    if (!string.IsNullOrEmpty(text))
                     {
-                        for (int i = 0; i < controlCount; i++)
-                        {
-                            string childExpr = $"{controlExpr}.Controls[{i}]";
-
-                            // Ottieni informazioni sul controllo
-                            string name = GetExpressionValue($"{childExpr}.Name") ?? $"Control_{i}";
-                            string type = GetExpressionValue($"{childExpr}.GetType().Name") ?? "Unknown";
-                            string text = GetExpressionValue($"{childExpr}.Text") ?? "";
-                            bool visible = GetExpressionValue($"{childExpr}.Visible") == "true";
-
-                            // Crea il nodo per questo controllo
-                            string nodeText = $"{name} ({type})";
-                            if (!string.IsNullOrEmpty(text))
-                            {
-                                nodeText += $" - '{text}'";
-                            }
-                            if (!visible)
-                            {
-                                nodeText += " [Hidden]";
-                            }
-
-                            TreeNode node = new TreeNode(nodeText)
-                            {
-                                Tag = childExpr
-                            };
-
-                            // Aggiungi proprietà aggiuntive
-                            AddControlProperties(childExpr, node);
-
-                            // Ricorsione sui controlli figli
-                            ExploreControlsRecursively(childExpr, node);
-
-                            parentNode.Nodes.Add(node);
-                        }
+                        nodeText += $" - '{text}'";
                     }
+                    if (!visible)
+                    {
+                        nodeText += " [Hidden]";
+                    }
+
+                    TreeNode node = new TreeNode(nodeText)
+                    {
+                        Tag = childExpr
+                    };
+
+                    // Aggungo proprietà aggiuntive (abbastanza oneroso da vedere magari con un sistema di Lazy Loading
+                    //AddControlProperties(childExpr, node);
+
+                    // Ricorsione sui controlli figli
+                    ExploreControlsRecursively(childExpr, node);
+
+                    parentNode.Nodes.Add(node);
                 }
             }
             catch (Exception ex)
@@ -373,15 +377,16 @@ namespace WindowsFormsExplorer
             try
             {
                 // Lista delle proprietà comuni da ispezionare
-                var properties = new[]
+                string[] properties = new[]
                 {
                     "Location", "Size", "Dock", "Anchor", "TabIndex", "Enabled",
                     "BackColor", "ForeColor", "Font", "Padding", "Margin"
                 };
 
-                foreach (var prop in properties)
+                foreach (string prop in properties)
                 {
                     string value = GetExpressionValue($"{controlExpr}.{prop}");
+
                     if (!string.IsNullOrEmpty(value))
                     {
                         TreeNode propNode = new TreeNode($"{prop}: {value}");
@@ -438,7 +443,7 @@ namespace WindowsFormsExplorer
             {
                 try
                 {
-                    Expression expr = dte.Debugger.GetExpression(expression, false, 300000);
+                    EnvDTE.Expression expr = dte.Debugger.GetExpression(expression, false, 30000);
                     return expr?.Value;
                 }
                 catch (COMException ex) when ((uint)ex.HResult == 0x80010001) // RPC_E_CALL_REJECTED
@@ -475,7 +480,6 @@ namespace WindowsFormsExplorer
         {
             try
             {
-
                 base.OnFormClosing(e);
 
                 if (dte != null)
@@ -489,8 +493,6 @@ namespace WindowsFormsExplorer
                 MessageFilter.Revoke();
 
             }
-
-
         }
 
 
