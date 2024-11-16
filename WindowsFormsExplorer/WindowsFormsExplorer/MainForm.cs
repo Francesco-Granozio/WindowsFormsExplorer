@@ -1,8 +1,10 @@
 ﻿using EnvDTE;
 using EnvDTE80;
 using System;
+using System.Collections.Generic;
 using System.Diagnostics;
 using System.Runtime.InteropServices;
+using System.Runtime.InteropServices.ComTypes;
 using System.Windows.Forms;
 
 namespace WindowsFormsExplorer
@@ -13,20 +15,28 @@ namespace WindowsFormsExplorer
         private System.Diagnostics.Process targetProcess;
 
 
+
         public MainForm()
         {
             InitializeComponent();
         }
 
 
+        [DllImport("ole32.dll")]
+        private static extern int GetRunningObjectTable(int reserved, out IRunningObjectTable pprot);
+
+        [DllImport("ole32.dll")]
+        private static extern int CreateBindCtx(int reserved, out IBindCtx ppbc);
+
+
         private void MainForm_Load(object sender, EventArgs e)
         {
+            MessageFilter.Register();
         }
 
 
         private void btnConnect_Click(object sender, EventArgs e)
         {
-            MessageFilter.Register();
 
             try
             {
@@ -43,10 +53,6 @@ namespace WindowsFormsExplorer
             {
                 MessageBox.Show($"Errore durante la connessione: {ex.Message}");
             }
-            finally
-            {
-                MessageFilter.Revoke();
-            }
         }
 
 
@@ -54,25 +60,27 @@ namespace WindowsFormsExplorer
         {
             try
             {
-                // Ottiene il processo target
                 targetProcess = System.Diagnostics.Process.GetProcessById(pid);
 
-                if (targetProcess == null)
+                // Enumerare tutte le istanze di Visual Studio attive
+                List<DTE2> visualStudioInstances = GetRunningVisualStudioInstances();
+
+                if (visualStudioInstances.Count == 0)
                 {
-                    throw new Exception("Processo non trovato!");
+                    MessageBox.Show("Nessuna istanza di Visual Studio trovata.");
+                    return;
                 }
 
-                // Ottiene l'istanza del debugger
-                //string progID = "VisualStudio.DTE.15.0"; // Visual studio 2017
-                //string progID = "VisualStudio.DTE.16.0"; // Visual studio 2019
-                string progID = "VisualStudio.DTE.17.0"; // Visual studio 2022
-                object obj = Marshal.GetActiveObject(progID);
-                dte = obj as DTE2;
+                // Mostrare una finestra di dialogo per scegliere l'istanza
+                DTE2 selectedDTE = ChooseVisualStudioInstance(visualStudioInstances);
 
-                if (dte == null)
+                if (selectedDTE == null)
                 {
-                    throw new Exception("Impossibile connettersi al debugger!");
+                    MessageBox.Show("Nessuna istanza selezionata.");
+                    return;
                 }
+
+                dte = selectedDTE;
 
                 // Verifica che il processo sia in debug
                 bool isDebugging = false;
@@ -94,6 +102,65 @@ namespace WindowsFormsExplorer
             {
                 MessageBox.Show("Errore durante la connessione al debugger: " + ex.Message);
             }
+        }
+
+        private List<DTE2> GetRunningVisualStudioInstances()
+        {
+            List<DTE2> instances = new List<DTE2>();
+
+            GetRunningObjectTable(0, out IRunningObjectTable rot);
+            rot.EnumRunning(out IEnumMoniker enumMoniker);
+            enumMoniker.Reset();
+
+            IMoniker[] monikers = new IMoniker[1];
+            IntPtr fetched = IntPtr.Zero;
+            while (enumMoniker.Next(1, monikers, fetched) == 0)
+            {
+                IBindCtx bindCtx;
+                CreateBindCtx(0, out bindCtx);
+                monikers[0].GetDisplayName(bindCtx, null, out string displayName);
+
+                if (displayName.StartsWith("!VisualStudio.DTE"))
+                {
+                    rot.GetObject(monikers[0], out object obj);
+                    if (obj is DTE2 dte)
+                    {
+                        instances.Add(dte);
+                    }
+                }
+            }
+
+            return instances;
+        }
+
+        private DTE2 ChooseVisualStudioInstance(List<DTE2> instances)
+        {
+            string[] instanceNames = new string[instances.Count];
+            for (int i = 0; i < instances.Count; i++)
+            {
+                instanceNames[i] = $"Instance {i + 1}: {instances[i].Solution?.FullName ?? "Senza soluzione aperta"}";
+            }
+
+            using (Form form = new Form())
+            {
+                ListBox listBox = new ListBox();
+                listBox.Items.AddRange(instanceNames);
+                listBox.Dock = DockStyle.Fill;
+                form.Controls.Add(listBox);
+                form.Text = "Seleziona un'istanza di Visual Studio";
+                form.ClientSize = new System.Drawing.Size(400, 300);
+
+                Button okButton = new Button() { Text = "OK", DialogResult = DialogResult.OK, Dock = DockStyle.Bottom };
+                form.Controls.Add(okButton);
+                form.AcceptButton = okButton;
+
+                if (form.ShowDialog() == DialogResult.OK && listBox.SelectedIndex >= 0)
+                {
+                    return instances[listBox.SelectedIndex];
+                }
+            }
+
+            return null;
         }
 
 
@@ -202,6 +269,8 @@ namespace WindowsFormsExplorer
 
         private void ExploreFormControls(int formIndex)
         {
+            Cursor.Current = Cursors.WaitCursor;
+
             treeViewControls.Nodes.Clear();
 
             try
@@ -223,6 +292,10 @@ namespace WindowsFormsExplorer
             catch (Exception ex)
             {
                 MessageBox.Show($"Errore durante l'esplorazione dei controlli: {ex.Message}");
+            }
+            finally
+            {
+                Cursor.Current = Cursors.Default;
             }
         }
 
@@ -400,13 +473,24 @@ namespace WindowsFormsExplorer
 
         protected override void OnFormClosing(FormClosingEventArgs e)
         {
-            base.OnFormClosing(e);
-
-            if (dte != null)
+            try
             {
-                Marshal.ReleaseComObject(dte);
-                dte = null; 
+
+                base.OnFormClosing(e);
+
+                if (dte != null)
+                {
+                    Marshal.ReleaseComObject(dte);
+                    dte = null;
+                }
             }
+            finally
+            {
+                MessageFilter.Revoke();
+
+            }
+
+
         }
 
 
