@@ -80,8 +80,6 @@ namespace WindowsFormsExplorer.Views
                     return;
 
 
-
-
                 VSInstanceSelectorForm vsInstanceSelectorForm = new VSInstanceSelectorForm(visualStudioInstancesResult.Value);
 
                 if (vsInstanceSelectorForm.ShowDialog() == DialogResult.Cancel)
@@ -161,41 +159,6 @@ namespace WindowsFormsExplorer.Views
 
         }
 
-
-        /// <summary>
-        /// Questo metodo visualizza una finestra di dialogo per permettere all'utente di scegliere
-        /// quale istanza di Visual Studio connessa desidera utilizzare, tra quelle attualmente in esecuzione.
-        /// La lista delle istanze viene passata come parametro alla funzione.
-        /// </summary>
-        private EnvDTE80.DTE2 ChooseVisualStudioInstance(List<EnvDTE80.DTE2> instances)
-        {
-            string[] instanceNames = new string[instances.Count];
-            for (int i = 0; i < instances.Count; i++)
-            {
-                instanceNames[i] = $"Instance {i + 1}: {instances[i].Solution?.FullName ?? "Without open solution (.sln)"}";
-            }
-
-            using (Form form = new Form())
-            {
-                ListBox listBox = new ListBox();
-                listBox.Items.AddRange(instanceNames);
-                listBox.Dock = DockStyle.Fill;
-                form.Controls.Add(listBox);
-                form.Text = "Select an instance of Visual Studio";
-                form.ClientSize = new System.Drawing.Size(400, 300);
-
-                Button okButton = new Button() { Text = "OK", DialogResult = DialogResult.OK, Dock = DockStyle.Bottom };
-                form.Controls.Add(okButton);
-                form.AcceptButton = okButton;
-
-                if (form.ShowDialog() == DialogResult.OK && listBox.SelectedIndex >= 0)
-                {
-                    return instances[listBox.SelectedIndex];
-                }
-            }
-
-            return null;
-        }
 
 
         private void RefreshOpenForms()

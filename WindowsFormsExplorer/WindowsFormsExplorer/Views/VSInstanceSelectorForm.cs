@@ -10,6 +10,11 @@ using System.Windows.Forms;
 
 namespace WindowsFormsExplorer.Views
 {
+    /// <summary>
+    /// Questa form mostra una finestra di dialogo per permettere all'utente di scegliere
+    /// quale istanza di Visual Studio connessa desidera utilizzare, tra quelle attualmente in esecuzione.
+    /// La lista delle istanze viene passata come parametro alla funzione.
+    /// </summary>
     public partial class VSInstanceSelectorForm : Form
     {
         private IReadOnlyList<EnvDTE80.DTE2> m_Instances;
@@ -60,16 +65,19 @@ namespace WindowsFormsExplorer.Views
             if (instancesDataGridView.SelectedRows.Count <= 0)
             {
                 MessageBox.Show("No row selected. Please select an instance.", "Warning", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                return;
             }
 
-            int selectedRowIndex = instancesDataGridView.SelectedRows[0].Index;
+            DataGridViewRow selectedRow = instancesDataGridView.SelectedRows[0];
 
-            if (selectedRowIndex < 0 || selectedRowIndex >= m_Instances.Count)
+            if (!int.TryParse(selectedRow.Cells[0].Value?.ToString(), out int instanceIndex) ||
+                instanceIndex - 1 < 0 || instanceIndex - 1 >= m_Instances.Count)
             {
                 MessageBox.Show("Invalid selection. Please try again.", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                return;
             }
 
-            SelectedInstance = m_Instances[selectedRowIndex];
+            SelectedInstance = m_Instances[instanceIndex - 1];
 
             this.DialogResult = DialogResult.OK;
             this.Close();
