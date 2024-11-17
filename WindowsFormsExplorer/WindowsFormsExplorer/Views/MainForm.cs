@@ -4,6 +4,7 @@ using System.Diagnostics.Contracts;
 using System.Runtime.InteropServices;
 using System.Runtime.InteropServices.ComTypes;
 using System.Windows.Forms;
+using WindowsFormsExplorer.Domain;
 using WindowsFormsExplorer.Services;
 using WindowsFormsExplorer.Utility;
 
@@ -11,15 +12,13 @@ namespace WindowsFormsExplorer.Views
 {
     public partial class MainForm : Form
     {
-        private EnvDTE80.DTE2 dte;
-        private System.Diagnostics.Process targetProcess;
         private bool m_CanLoad = false;
+        private readonly List<FormInfo> m_FormInfos = new List<FormInfo>();
+        private Debugger m_Debugger = null;
 
         public MainForm()
         {
             InitializeComponent();
-
-            //non so perchè ma il designer le rimuove
         }
 
 
@@ -41,7 +40,7 @@ namespace WindowsFormsExplorer.Views
             try
             {
 
-                bool m_CanLoad = ConnectToProcess();
+                ConnectToProcess();
 
                 if (m_CanLoad)
                 {
@@ -59,13 +58,15 @@ namespace WindowsFormsExplorer.Views
         }
 
 
-        private bool ConnectToProcess()
+        private void ConnectToProcess()
         {
+            EnvDTE80.DTE2 dte;
+
             try
             {
-                ProcessConnector processConnector = new ProcessConnector();
+                ProcessInspector processInspector = new ProcessInspector();
 
-                var visualStudioInstancesResult = processConnector.GetVisualStudioInstances();
+                var visualStudioInstancesResult = processInspector.GetVisualStudioInstances();
 
                 visualStudioInstancesResult.Match(
                     onSuccess: instances => { },
@@ -80,14 +81,14 @@ namespace WindowsFormsExplorer.Views
                 );
 
                 if (visualStudioInstancesResult.IsFailure)
-                    return false;
+                    return;
 
 
                 VSInstanceSelectorForm vsInstanceSelectorForm = new VSInstanceSelectorForm(visualStudioInstancesResult.Value);
 
                 if (vsInstanceSelectorForm.ShowDialog() == DialogResult.Cancel)
                 {
-                    return false;
+                    return;
                 }
 
                 //Mostra una finestra di dialogo per scegliere l'istanza
@@ -98,25 +99,26 @@ namespace WindowsFormsExplorer.Views
                 DialogResult dialogResult = processSelectorForm.ShowDialog();
                 if (dialogResult == DialogResult.Cancel)
                 {
-                    return false;
+                    return;
                 }
                 else if (dialogResult == DialogResult.Abort)
                 {
                     MessageBox.Show("No debug processes found in the selected instance.", "Warning", MessageBoxButtons.OK, MessageBoxIcon.Warning);
-                    return false;
+                    return;
                 }
 
                 int selectedPID = processSelectorForm.SelectedProcess.ProcessID;
-                targetProcess = System.Diagnostics.Process.GetProcessById(selectedPID);
 
-
-                // Verifica che il processo sia in debug
+                // Verifico che il processo sia in debug
+                // e ottengo il processo debuggato corretto
                 bool isDebugging = false;
                 foreach (EnvDTE80.Process2 proc in dte.Debugger.DebuggedProcesses)
                 {
                     if (proc.ProcessID == selectedPID)
                     {
                         isDebugging = true;
+                        m_Debugger = new Debugger(proc, dte);
+                        m_CanLoad = true;
                         break;
                     }
                 }
@@ -124,14 +126,13 @@ namespace WindowsFormsExplorer.Views
                 if (!isDebugging)
                 {
                     MessageBox.Show("Selected process MUST be in debug mode!", "Warning", MessageBoxButtons.OK, MessageBoxIcon.Warning);
-                    return false;
+                    return;
                 }
             }
             catch (COMException ex)
             {
                 MessageBox.Show($"Error while connecting to debugger: {ex.Message}", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
             }
-            return true;
         }
 
 
@@ -142,20 +143,10 @@ namespace WindowsFormsExplorer.Views
 
             try
             {
-                // Ottieni il processo debuggato corretto
-                EnvDTE.Process debuggedProcess = null;
-                foreach (EnvDTE.Process proc in dte.Debugger.DebuggedProcesses)
-                {
-                    if (proc.ProcessID == targetProcess.Id)
-                    {
-                        debuggedProcess = proc;
-                        break;
-                    }
-                }
 
-                if (debuggedProcess == null)
+                if (m_Debugger == null)
                 {
-                    MessageBox.Show("Warning", "Debugged process not found!", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                    MessageBox.Show("Debugger not connected!", "Warning", MessageBoxButtons.OK, MessageBoxIcon.Warning);
                     return;
                 }
 
@@ -163,24 +154,21 @@ namespace WindowsFormsExplorer.Views
                 try
                 {
                     // Seleziono il primo thread disponibile
-                    EnvDTE.Processes threads = debuggedProcess.Collection;
-                    if (threads.Count <= 0)
+
+                    if (!m_Debugger.HasThreads)
                     {
                         MessageBox.Show("Warning", "No threads available in the process!", MessageBoxButtons.OK, MessageBoxIcon.Warning);
                         return;
                     }
 
-                    // Seleziona il primo thread
-                    EnvDTE.Process mainThread = threads.Item(1);
-
                     // Il debugger deve essere in pausa
-                    if (dte.Debugger.CurrentMode != EnvDTE.dbgDebugMode.dbgBreakMode)
+                    if (m_Debugger.DTE.Debugger.CurrentMode != EnvDTE.dbgDebugMode.dbgBreakMode)
                     {
                         MessageBox.Show("Warning", "The debugger MUST be in pause (break) mode!", MessageBoxButtons.OK, MessageBoxIcon.Warning);
                         return;
                     }
 
-                    string formCountStr = GetExpressionValue("System.Windows.Forms.Application.OpenForms.Count");
+                    string formCountStr = m_Debugger.GetExpressionValue("System.Windows.Forms.Application.OpenForms.Count");
 
 
                     if (string.IsNullOrEmpty(formCountStr))
@@ -199,19 +187,20 @@ namespace WindowsFormsExplorer.Views
                     {
                         string baseExpr = $"System.Windows.Forms.Application.OpenForms[{i}]";
 
-                        EnvDTE.Expression formExpr = dte.Debugger.GetExpression(baseExpr);
+                        EnvDTE.Expression formExpr = m_Debugger.DTE.Debugger.GetExpression(baseExpr);
                         if (formExpr == null)
                         {
                             continue;
                         }
 
-                        string text = GetExpressionValue($"{baseExpr}.Text") ?? "N/A";
+                        string text = m_Debugger.GetExpressionValue($"{baseExpr}.Text") ?? "N/A";
                         string type = formExpr.Type ?? "N/A";
-                        string visible = GetExpressionValue($"{baseExpr}.Visible") ?? "N/A";
-                        string handle = GetExpressionValue($"{baseExpr}.Handle.ToInt32()") ?? "N/A";
-                        string name = GetExpressionValue($"{baseExpr}.Name") ?? $"Form_{i}";
+                        string visible = m_Debugger.GetExpressionValue($"{baseExpr}.Visible") ?? "N/A";
+                        string handle = m_Debugger.GetExpressionValue($"{baseExpr}.Handle.ToInt32()") ?? "N/A";
+                        string name = m_Debugger.GetExpressionValue($"{baseExpr}.Name") ?? $"Form_{i}";
 
                         formsDataGridView.Rows.Add(name, type, text, visible, handle);
+                        m_FormInfos.Add(new FormInfo(name, type, text, visible, handle));
                     }
                 }
                 catch (Exception ex)
@@ -248,11 +237,11 @@ namespace WindowsFormsExplorer.Views
             try
             {
                 string baseExpr = $"System.Windows.Forms.Application.OpenForms[{formIndex}]";
-                EnvDTE.Expression formExpr = dte.Debugger.GetExpression(baseExpr);
+                EnvDTE.Expression formExpr = m_Debugger.DTE.Debugger.GetExpression(baseExpr);
 
                 if (formExpr != null)
                 {
-                    TreeNode rootNode = new TreeNode(GetExpressionValue($"{baseExpr}.Name") ?? $"Form_{formIndex}")
+                    TreeNode rootNode = new TreeNode(m_Debugger.GetExpressionValue($"{baseExpr}.Name") ?? $"Form_{formIndex}")
                     {
                         Tag = baseExpr
                     };
@@ -278,7 +267,7 @@ namespace WindowsFormsExplorer.Views
             try
             {
                 // Ottengo la collezione Controls
-                string controlsStr = GetExpressionValue($"{controlExpr}.Controls");
+                string controlsStr = m_Debugger.GetExpressionValue($"{controlExpr}.Controls");
 
                 if (controlsStr == null)
                 {
@@ -286,7 +275,7 @@ namespace WindowsFormsExplorer.Views
                 }
 
                 // Ottengo il Count dei controlli
-                string controlCountStr = GetExpressionValue($"{controlExpr}.Controls.Count");
+                string controlCountStr = m_Debugger.GetExpressionValue($"{controlExpr}.Controls.Count");
 
                 if (!int.TryParse(controlCountStr, out int controlCount))
                 {
@@ -298,10 +287,10 @@ namespace WindowsFormsExplorer.Views
                     string childExpr = $"{controlExpr}.Controls[{i}]";
 
                     // Ottengo informazioni sul controllo
-                    string name = GetExpressionValue($"{childExpr}.Name") ?? $"Control_{i}";
-                    string type = GetExpressionValue($"{childExpr}.GetType().Name") ?? "Unknown";
-                    string text = GetExpressionValue($"{childExpr}.Text") ?? "";
-                    bool visible = GetExpressionValue($"{childExpr}.Visible") == "true";
+                    string name = m_Debugger.GetExpressionValue($"{childExpr}.Name") ?? $"Control_{i}";
+                    string type = m_Debugger.GetExpressionValue($"{childExpr}.GetType().Name") ?? "Unknown";
+                    string text = m_Debugger.GetExpressionValue($"{childExpr}.Text") ?? "";
+                    bool visible = m_Debugger.GetExpressionValue($"{childExpr}.Visible") == "true";
 
                     // Creo il nodo per questo controllo
                     string nodeText = $"{name} ({type})";
@@ -350,7 +339,7 @@ namespace WindowsFormsExplorer.Views
 
                 foreach (string prop in properties)
                 {
-                    string value = GetExpressionValue($"{controlExpr}.{prop}");
+                    string value = m_Debugger.GetExpressionValue($"{controlExpr}.{prop}");
 
                     if (!string.IsNullOrEmpty(value))
                     {
@@ -360,7 +349,7 @@ namespace WindowsFormsExplorer.Views
                 }
 
                 // Proprietà specifiche per diversi tipi di controlli
-                string type = GetExpressionValue($"{controlExpr}.GetType().Name");
+                string type = m_Debugger.GetExpressionValue($"{controlExpr}.GetType().Name");
                 switch (type)
                 {
                     case "TextBox":
@@ -390,7 +379,7 @@ namespace WindowsFormsExplorer.Views
 
         private void AddProperty(TreeNode node, string controlExpr, string propertyName)
         {
-            string value = GetExpressionValue($"{controlExpr}.{propertyName}");
+            string value = m_Debugger.GetExpressionValue($"{controlExpr}.{propertyName}");
             if (!string.IsNullOrEmpty(value))
             {
                 TreeNode propNode = new TreeNode($"{propertyName}: {value}");
@@ -398,33 +387,6 @@ namespace WindowsFormsExplorer.Views
             }
         }
 
-
-        private string GetExpressionValue(string expression)
-        {
-            int retryCount = 3;
-            int delayBetweenRetries = 100; // Millisecondi
-
-            for (int i = 0; i < retryCount; i++)
-            {
-                try
-                {
-                    EnvDTE.Expression expr = dte.Debugger.GetExpression(expression, false, 30000);
-                    return expr?.Value;
-                }
-                catch (COMException ex) when ((uint)ex.HResult == 0x80010001) // RPC_E_CALL_REJECTED
-                {
-                    if (i == retryCount - 1)
-                    {
-                        Console.WriteLine($"Exception during expression fetching: {ex.Message}");
-                        throw; // Rilancia l'eccezione se siamo all'ultimo tentativo
-                    }
-
-                    // Aspetta prima del prossimo tentativo
-                    System.Threading.Thread.Sleep(delayBetweenRetries);
-                }
-            }
-            return null;
-        }
 
 
 
@@ -453,12 +415,7 @@ namespace WindowsFormsExplorer.Views
             try
             {
                 base.OnFormClosing(e);
-
-                if (dte != null)
-                {
-                    Marshal.ReleaseComObject(dte);
-                    dte = null;
-                }
+                m_Debugger.ReleaseDTE();
             }
             finally
             {

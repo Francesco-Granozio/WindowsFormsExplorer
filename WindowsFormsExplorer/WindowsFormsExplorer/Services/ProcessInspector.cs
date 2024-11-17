@@ -9,7 +9,7 @@ using WindowsFormsExplorer.Utility;
 
 namespace WindowsFormsExplorer.Services
 {
-    public class ProcessConnector
+    public class ProcessInspector
     {
         [DllImport("ole32.dll")]
         private static extern int GetRunningObjectTable(int reserved, out IRunningObjectTable pprot);

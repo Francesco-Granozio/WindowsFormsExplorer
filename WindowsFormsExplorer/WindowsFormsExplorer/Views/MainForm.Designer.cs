@@ -41,15 +41,15 @@ namespace WindowsFormsExplorer.Views
             System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(MainForm));
             this.splitContainer = new System.Windows.Forms.SplitContainer();
             this.formsDataGridView = new System.Windows.Forms.DataGridView();
-            this.treeViewControls = new System.Windows.Forms.TreeView();
-            this.controlsPanel = new System.Windows.Forms.Panel();
-            this.btnConnect = new System.Windows.Forms.Button();
-            this.btnRefresh = new System.Windows.Forms.Button();
             this.colName = new System.Windows.Forms.DataGridViewTextBoxColumn();
             this.colType = new System.Windows.Forms.DataGridViewTextBoxColumn();
             this.colText = new System.Windows.Forms.DataGridViewTextBoxColumn();
             this.colVisible = new System.Windows.Forms.DataGridViewTextBoxColumn();
             this.colHandle = new System.Windows.Forms.DataGridViewTextBoxColumn();
+            this.treeViewControls = new System.Windows.Forms.TreeView();
+            this.controlsPanel = new System.Windows.Forms.Panel();
+            this.btnConnect = new System.Windows.Forms.Button();
+            this.btnRefresh = new System.Windows.Forms.Button();
             ((System.ComponentModel.ISupportInitialize)(this.splitContainer)).BeginInit();
             this.splitContainer.Panel1.SuspendLayout();
             this.splitContainer.Panel2.SuspendLayout();
@@ -107,48 +107,6 @@ namespace WindowsFormsExplorer.Views
             this.formsDataGridView.TabIndex = 0;
             this.formsDataGridView.SelectionChanged += new System.EventHandler(this.formsDataGridView_SelectionChanged);
             // 
-            // treeViewControls
-            // 
-            this.treeViewControls.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.treeViewControls.Location = new System.Drawing.Point(0, 0);
-            this.treeViewControls.Name = "treeViewControls";
-            this.treeViewControls.Size = new System.Drawing.Size(714, 716);
-            this.treeViewControls.TabIndex = 0;
-            // 
-            // controlsPanel
-            // 
-            this.controlsPanel.Controls.Add(this.btnConnect);
-            this.controlsPanel.Controls.Add(this.btnRefresh);
-            this.controlsPanel.Dock = System.Windows.Forms.DockStyle.Top;
-            this.controlsPanel.Location = new System.Drawing.Point(0, 0);
-            this.controlsPanel.Name = "controlsPanel";
-            this.controlsPanel.Size = new System.Drawing.Size(1184, 45);
-            this.controlsPanel.TabIndex = 1;
-            // 
-            // btnConnect
-            // 
-            this.btnConnect.Image = global::WindowsFormsExplorer.Properties.Resources.connect;
-            this.btnConnect.ImageAlign = System.Drawing.ContentAlignment.MiddleLeft;
-            this.btnConnect.Location = new System.Drawing.Point(10, 10);
-            this.btnConnect.Name = "btnConnect";
-            this.btnConnect.Size = new System.Drawing.Size(75, 25);
-            this.btnConnect.TabIndex = 1;
-            this.btnConnect.Text = "Connect";
-            this.btnConnect.TextAlign = System.Drawing.ContentAlignment.MiddleRight;
-            this.btnConnect.Click += new System.EventHandler(this.btnConnect_Click);
-            // 
-            // btnRefresh
-            // 
-            this.btnRefresh.Image = global::WindowsFormsExplorer.Properties.Resources.refresh;
-            this.btnRefresh.ImageAlign = System.Drawing.ContentAlignment.MiddleLeft;
-            this.btnRefresh.Location = new System.Drawing.Point(91, 10);
-            this.btnRefresh.Name = "btnRefresh";
-            this.btnRefresh.Size = new System.Drawing.Size(75, 25);
-            this.btnRefresh.TabIndex = 2;
-            this.btnRefresh.Text = "Refresh";
-            this.btnRefresh.TextAlign = System.Drawing.ContentAlignment.MiddleRight;
-            this.btnRefresh.Click += new System.EventHandler(this.btnRefresh_Click);
-            // 
             // colName
             // 
             dataGridViewCellStyle1.WrapMode = System.Windows.Forms.DataGridViewTriState.True;
@@ -192,6 +150,48 @@ namespace WindowsFormsExplorer.Views
             this.colHandle.ReadOnly = true;
             this.colHandle.Resizable = System.Windows.Forms.DataGridViewTriState.True;
             this.colHandle.SortMode = System.Windows.Forms.DataGridViewColumnSortMode.NotSortable;
+            // 
+            // treeViewControls
+            // 
+            this.treeViewControls.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.treeViewControls.Location = new System.Drawing.Point(0, 0);
+            this.treeViewControls.Name = "treeViewControls";
+            this.treeViewControls.Size = new System.Drawing.Size(714, 716);
+            this.treeViewControls.TabIndex = 0;
+            // 
+            // controlsPanel
+            // 
+            this.controlsPanel.Controls.Add(this.btnConnect);
+            this.controlsPanel.Controls.Add(this.btnRefresh);
+            this.controlsPanel.Dock = System.Windows.Forms.DockStyle.Top;
+            this.controlsPanel.Location = new System.Drawing.Point(0, 0);
+            this.controlsPanel.Name = "controlsPanel";
+            this.controlsPanel.Size = new System.Drawing.Size(1184, 45);
+            this.controlsPanel.TabIndex = 1;
+            // 
+            // btnConnect
+            // 
+            this.btnConnect.Image = global::WindowsFormsExplorer.Properties.Resources.connect;
+            this.btnConnect.ImageAlign = System.Drawing.ContentAlignment.MiddleLeft;
+            this.btnConnect.Location = new System.Drawing.Point(10, 10);
+            this.btnConnect.Name = "btnConnect";
+            this.btnConnect.Size = new System.Drawing.Size(75, 25);
+            this.btnConnect.TabIndex = 1;
+            this.btnConnect.Text = "Connect";
+            this.btnConnect.TextAlign = System.Drawing.ContentAlignment.MiddleRight;
+            this.btnConnect.Click += new System.EventHandler(this.btnConnect_Click);
+            // 
+            // btnRefresh
+            // 
+            this.btnRefresh.Image = global::WindowsFormsExplorer.Properties.Resources.refresh;
+            this.btnRefresh.ImageAlign = System.Drawing.ContentAlignment.MiddleLeft;
+            this.btnRefresh.Location = new System.Drawing.Point(91, 10);
+            this.btnRefresh.Name = "btnRefresh";
+            this.btnRefresh.Size = new System.Drawing.Size(75, 25);
+            this.btnRefresh.TabIndex = 2;
+            this.btnRefresh.Text = "Refresh";
+            this.btnRefresh.TextAlign = System.Drawing.ContentAlignment.MiddleRight;
+            this.btnRefresh.Click += new System.EventHandler(this.btnRefresh_Click);
             // 
             // MainForm
             // 
