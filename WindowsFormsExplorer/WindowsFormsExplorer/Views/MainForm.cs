@@ -1,10 +1,13 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics.Contracts;
 using System.Runtime.InteropServices;
 using System.Runtime.InteropServices.ComTypes;
 using System.Windows.Forms;
+using WindowsFormsExplorer.Services;
+using WindowsFormsExplorer.Utility;
 
-namespace WindowsFormsExplorer
+namespace WindowsFormsExplorer.Views
 {
     public partial class MainForm : Form
     {
@@ -57,26 +60,39 @@ namespace WindowsFormsExplorer
         {
             try
             {
+                ProcessConnector processConnector = new ProcessConnector();
 
-                // Enumerare tutte le istanze di Visual Studio attive
-                List<EnvDTE80.DTE2> visualStudioInstances = GetRunningVisualStudioInstances();
+                var visualStudioInstancesResult = processConnector.GetVisualStudioInstances();
 
-                if (visualStudioInstances.Count == 0)
-                {
-                    MessageBox.Show("Warning", "No Visual Studio instance found.", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                visualStudioInstancesResult.Match(
+                    onSuccess: instances => { },
+                    onFailure: error =>
+                    {
+                        if (error.IsIn(ErrorCode.Exception, ErrorCode.DebuggerConnectionError))
+                            MessageBox.Show(error.Message, "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+
+                        else if (error.Is(ErrorCode.NoVSIstanceFound))
+                            MessageBox.Show(error.Message, "Warning", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                    }
+                );
+
+                if (visualStudioInstancesResult.IsFailure)
                     return;
-                }
 
-                // Mostrare una finestra di dialogo per scegliere l'istanza
-                EnvDTE80.DTE2 selectedDTE = ChooseVisualStudioInstance(visualStudioInstances);
 
-                if (selectedDTE == null)
+
+
+                VSInstanceSelectorForm vsInstanceSelectorForm = new VSInstanceSelectorForm(visualStudioInstancesResult.Value);
+
+                if (vsInstanceSelectorForm.ShowDialog() == DialogResult.Cancel)
                 {
                     MessageBox.Show("Warning", "No instance selected.", MessageBoxButtons.OK, MessageBoxIcon.Warning);
                     return;
                 }
 
-                dte = selectedDTE;
+                //Mostra una finestra di dialogo per scegliere l'istanza
+                dte = vsInstanceSelectorForm.SelectedInstance;
+
 
                 List<string> processInfoList = new List<string>();
                 foreach (EnvDTE80.Process2 proc in dte.Debugger.DebuggedProcesses)
@@ -142,54 +158,7 @@ namespace WindowsFormsExplorer
             {
                 MessageBox.Show("Error", $"Error while connecting to debugger: {ex.Message}", MessageBoxButtons.OK, MessageBoxIcon.Error);
             }
-        }
 
-
-        /// <summary>
-        /// Questo metodo restituisce una lista di tutte le istanze di Visual Studio attualmente in esecuzione
-        /// utilizzando la Running Object Table (ROT) e la COM API per interagire con i processi attivi.
-        /// L'idea è di trovare tutte le istanze di Visual Studio in esecuzione e restituirle come una lista.
-        /// </summary>
-        private List<EnvDTE80.DTE2> GetRunningVisualStudioInstances()
-        {
-            List<EnvDTE80.DTE2> instances = new List<EnvDTE80.DTE2>();
-
-            // Ottiene la Running Object Table (ROT), che è un oggetto COM che permette di ottenere informazioni
-            // sui processi in esecuzione registrati.
-            GetRunningObjectTable(0, out IRunningObjectTable rot);
-            rot.EnumRunning(out IEnumMoniker enumMoniker);  // Ottiene un enumeratore per gli oggetti in esecuzione
-            enumMoniker.Reset();  // Reset dell'enumeratore per partire dall'inizio
-
-            // Crea un array di moniker per raccogliere informazioni sugli oggetti
-            // Adifferenza di un semplice puntatore o riferimento a un oggetto in memoria,
-            // un moniker non si limita a fare riferimento alla memoria di un processo in corso,
-            // ma può essere utilizzato per localizzare l'oggetto anche se si trova in un altro contesto,
-            // come un altro processo, una rete o un file.
-            IMoniker[] monikers = new IMoniker[1];
-            IntPtr fetched = IntPtr.Zero;
-
-            // Enumerazione degli oggetti nella ROT
-            while (enumMoniker.Next(1, monikers, fetched) == 0)
-            {
-                // Crea un contesto di binding per ogni moniker
-                CreateBindCtx(0, out IBindCtx bindCtx);
-                monikers[0].GetDisplayName(bindCtx, null, out string displayName);  // Ottiene il nome visualizzabile del moniker
-
-                // Verifica se il nome del moniker corrisponde a un'istanza di Visual Studio
-                if (!displayName.StartsWith("!VisualStudio.DTE"))
-                {
-                    continue;
-                }
-
-                // Recupera l'oggetto associato al moniker
-                rot.GetObject(monikers[0], out object obj);
-                if (obj is EnvDTE80.DTE2 dte)  // Se l'oggetto è un'istanza di Visual Studio (DTE2), lo aggiunge alla lista
-                {
-                    instances.Add(dte);
-                }
-            }
-
-            return instances;
         }
 
 

@@ -7,7 +7,7 @@ using System.Text;
 using System.Threading.Tasks;
 using WindowsFormsExplorer.Utility;
 
-namespace WindowsFormsExplorer
+namespace WindowsFormsExplorer.Services
 {
     public class ProcessConnector
     {

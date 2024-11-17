@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Linq;
 
 namespace WindowsFormsExplorer.Utility
 {
@@ -39,8 +40,18 @@ namespace WindowsFormsExplorer.Utility
         public bool HasException => Exception != null;
 
         public static Error None => new Error(ErrorCode.None, string.Empty);
-
-
     }
 
+    public static class ErrorExtensions
+    {
+        public static bool IsIn(this Error error, params ErrorCode[] errorCodes)
+        {
+            return errorCodes.Contains(error.Code);
+        }
+
+        public static bool Is(this Error error, ErrorCode errorCode)
+        {
+            return error.Code == errorCode;
+        }
+    }
 }

@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Runtime.InteropServices;
 
-namespace WindowsFormsExplorer
+namespace WindowsFormsExplorer.Utility
 {
     public class MessageFilter : IOleMessageFilter
     {

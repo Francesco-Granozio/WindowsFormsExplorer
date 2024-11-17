@@ -51,9 +51,27 @@ namespace WindowsFormsExplorer.Utility
             return func(Value);
         }
 
+      
 
     }
 
+    public static class ResultExtensions
+    {
+        public static void Match<T>(
+            this Result<T> result,
+            Action<T> onSuccess,
+            Action<Error> onFailure)
+        {
+            if (result.IsSuccess)
+            {
+                onSuccess(result.Value);
+            }
+            else
+            {
+                onFailure(result.Error);
+            }
+        }
+    }
 
 
 }
