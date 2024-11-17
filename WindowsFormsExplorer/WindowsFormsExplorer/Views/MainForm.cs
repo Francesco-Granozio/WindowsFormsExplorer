@@ -13,18 +13,13 @@ namespace WindowsFormsExplorer.Views
     {
         private EnvDTE80.DTE2 dte;
         private System.Diagnostics.Process targetProcess;
-
+        private bool m_CanLoad = false;
 
         public MainForm()
         {
             InitializeComponent();
 
             //non so perchè ma il designer le rimuove
-            this.listViewForms.Columns.Add("Name", 150);
-            this.listViewForms.Columns.Add("Type", 200);
-            this.listViewForms.Columns.Add("Text", 200);
-            this.listViewForms.Columns.Add("Visible", 100);
-            this.listViewForms.Columns.Add("Handle", 100);
         }
 
 
@@ -46,16 +41,20 @@ namespace WindowsFormsExplorer.Views
             try
             {
 
-                bool canLoad = ConnectToProcess();
+                bool m_CanLoad = ConnectToProcess();
 
-                if (canLoad)
+                if (m_CanLoad)
                 {
                     RefreshOpenForms();
+                }
+                else
+                {
+                    MessageBox.Show($"You must first connect to the debugger", "Warning", MessageBoxButtons.OK, MessageBoxIcon.Warning);
                 }
             }
             catch (Exception ex)
             {
-                MessageBox.Show("Error", $"Error while connecting to debugger: {ex.Message}", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                MessageBox.Show($"Error while connecting to debugger: {ex.Message}", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
             }
         }
 
@@ -88,7 +87,6 @@ namespace WindowsFormsExplorer.Views
 
                 if (vsInstanceSelectorForm.ShowDialog() == DialogResult.Cancel)
                 {
-                    //MessageBox.Show("No instance selected.", "Warning", MessageBoxButtons.OK, MessageBoxIcon.Warning);
                     return false;
                 }
 
@@ -100,7 +98,6 @@ namespace WindowsFormsExplorer.Views
                 DialogResult dialogResult = processSelectorForm.ShowDialog();
                 if (dialogResult == DialogResult.Cancel)
                 {
-                    //MessageBox.Show("No process selected.", "Warning", MessageBoxButtons.OK, MessageBoxIcon.Warning);
                     return false;
                 }
                 else if (dialogResult == DialogResult.Abort)
@@ -141,7 +138,7 @@ namespace WindowsFormsExplorer.Views
 
         private void RefreshOpenForms()
         {
-            listViewForms.Items.Clear();
+            formsDataGridView.Rows.Clear();
 
             try
             {
@@ -214,14 +211,7 @@ namespace WindowsFormsExplorer.Views
                         string handle = GetExpressionValue($"{baseExpr}.Handle.ToInt32()") ?? "N/A";
                         string name = GetExpressionValue($"{baseExpr}.Name") ?? $"Form_{i}";
 
-                        ListViewItem item = new ListViewItem(new string[] {
-                                                name,
-                                                type,
-                                                text,
-                                                visible,
-                                                handle
-                                            });
-                        listViewForms.Items.Add(item);
+                        formsDataGridView.Rows.Add(name, type, text, visible, handle);
                     }
                 }
                 catch (Exception ex)
@@ -237,14 +227,14 @@ namespace WindowsFormsExplorer.Views
         }
 
 
-        private void listViewForms_SelectedIndexChanged(object sender, EventArgs e)
+        private void formsDataGridView_SelectionChanged(object sender, EventArgs e)
         {
-            if (listViewForms.SelectedItems.Count <= 0)
+            if (formsDataGridView.Rows.Count <= 0)
             {
                 return;
             }
 
-            int formIndex = listViewForms.SelectedItems[0].Index;
+            int formIndex = formsDataGridView.SelectedRows[0].Index;
             ExploreFormControls(formIndex);
         }
 
@@ -442,7 +432,14 @@ namespace WindowsFormsExplorer.Views
         {
             try
             {
-                RefreshOpenForms();
+                if (m_CanLoad)
+                {
+                    RefreshOpenForms();
+                }
+                else
+                {
+                    MessageBox.Show($"You must first connect to the debugger", "Warning", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                }
             }
             catch (Exception ex)
             {

@@ -32,17 +32,29 @@ namespace WindowsFormsExplorer.Views
         /// </summary>
         private void InitializeComponent()
         {
+            System.Windows.Forms.DataGridViewCellStyle dataGridViewCellStyle6 = new System.Windows.Forms.DataGridViewCellStyle();
+            System.Windows.Forms.DataGridViewCellStyle dataGridViewCellStyle1 = new System.Windows.Forms.DataGridViewCellStyle();
+            System.Windows.Forms.DataGridViewCellStyle dataGridViewCellStyle2 = new System.Windows.Forms.DataGridViewCellStyle();
+            System.Windows.Forms.DataGridViewCellStyle dataGridViewCellStyle3 = new System.Windows.Forms.DataGridViewCellStyle();
+            System.Windows.Forms.DataGridViewCellStyle dataGridViewCellStyle4 = new System.Windows.Forms.DataGridViewCellStyle();
+            System.Windows.Forms.DataGridViewCellStyle dataGridViewCellStyle5 = new System.Windows.Forms.DataGridViewCellStyle();
             System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(MainForm));
             this.splitContainer = new System.Windows.Forms.SplitContainer();
-            this.listViewForms = new System.Windows.Forms.ListView();
+            this.formsDataGridView = new System.Windows.Forms.DataGridView();
             this.treeViewControls = new System.Windows.Forms.TreeView();
             this.controlsPanel = new System.Windows.Forms.Panel();
             this.btnConnect = new System.Windows.Forms.Button();
             this.btnRefresh = new System.Windows.Forms.Button();
+            this.colName = new System.Windows.Forms.DataGridViewTextBoxColumn();
+            this.colType = new System.Windows.Forms.DataGridViewTextBoxColumn();
+            this.colText = new System.Windows.Forms.DataGridViewTextBoxColumn();
+            this.colVisible = new System.Windows.Forms.DataGridViewTextBoxColumn();
+            this.colHandle = new System.Windows.Forms.DataGridViewTextBoxColumn();
             ((System.ComponentModel.ISupportInitialize)(this.splitContainer)).BeginInit();
             this.splitContainer.Panel1.SuspendLayout();
             this.splitContainer.Panel2.SuspendLayout();
             this.splitContainer.SuspendLayout();
+            ((System.ComponentModel.ISupportInitialize)(this.formsDataGridView)).BeginInit();
             this.controlsPanel.SuspendLayout();
             this.SuspendLayout();
             // 
@@ -54,35 +66,53 @@ namespace WindowsFormsExplorer.Views
             // 
             // splitContainer.Panel1
             // 
-            this.splitContainer.Panel1.Controls.Add(this.listViewForms);
+            this.splitContainer.Panel1.Controls.Add(this.formsDataGridView);
             // 
             // splitContainer.Panel2
             // 
             this.splitContainer.Panel2.Controls.Add(this.treeViewControls);
             this.splitContainer.Size = new System.Drawing.Size(1184, 716);
-            this.splitContainer.SplitterDistance = 441;
+            this.splitContainer.SplitterDistance = 466;
             this.splitContainer.TabIndex = 0;
             // 
-            // listViewForms
+            // formsDataGridView
             // 
-            this.listViewForms.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.listViewForms.FullRowSelect = true;
-            this.listViewForms.GridLines = true;
-            this.listViewForms.HideSelection = false;
-            this.listViewForms.Location = new System.Drawing.Point(0, 0);
-            this.listViewForms.Name = "listViewForms";
-            this.listViewForms.Size = new System.Drawing.Size(441, 716);
-            this.listViewForms.TabIndex = 0;
-            this.listViewForms.UseCompatibleStateImageBehavior = false;
-            this.listViewForms.View = System.Windows.Forms.View.Details;
-            this.listViewForms.SelectedIndexChanged += new System.EventHandler(this.listViewForms_SelectedIndexChanged);
+            this.formsDataGridView.AllowUserToAddRows = false;
+            this.formsDataGridView.AllowUserToDeleteRows = false;
+            this.formsDataGridView.AllowUserToOrderColumns = true;
+            this.formsDataGridView.AutoSizeRowsMode = System.Windows.Forms.DataGridViewAutoSizeRowsMode.AllCells;
+            this.formsDataGridView.ColumnHeadersHeightSizeMode = System.Windows.Forms.DataGridViewColumnHeadersHeightSizeMode.AutoSize;
+            this.formsDataGridView.Columns.AddRange(new System.Windows.Forms.DataGridViewColumn[] {
+            this.colName,
+            this.colType,
+            this.colText,
+            this.colVisible,
+            this.colHandle});
+            dataGridViewCellStyle6.Alignment = System.Windows.Forms.DataGridViewContentAlignment.MiddleLeft;
+            dataGridViewCellStyle6.BackColor = System.Drawing.SystemColors.Window;
+            dataGridViewCellStyle6.Font = new System.Drawing.Font("Microsoft Sans Serif", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            dataGridViewCellStyle6.ForeColor = System.Drawing.SystemColors.ControlText;
+            dataGridViewCellStyle6.SelectionBackColor = System.Drawing.SystemColors.Highlight;
+            dataGridViewCellStyle6.SelectionForeColor = System.Drawing.SystemColors.HighlightText;
+            dataGridViewCellStyle6.WrapMode = System.Windows.Forms.DataGridViewTriState.True;
+            this.formsDataGridView.DefaultCellStyle = dataGridViewCellStyle6;
+            this.formsDataGridView.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.formsDataGridView.Location = new System.Drawing.Point(0, 0);
+            this.formsDataGridView.MultiSelect = false;
+            this.formsDataGridView.Name = "formsDataGridView";
+            this.formsDataGridView.ReadOnly = true;
+            this.formsDataGridView.RowHeadersVisible = false;
+            this.formsDataGridView.SelectionMode = System.Windows.Forms.DataGridViewSelectionMode.FullRowSelect;
+            this.formsDataGridView.Size = new System.Drawing.Size(466, 716);
+            this.formsDataGridView.TabIndex = 0;
+            this.formsDataGridView.SelectionChanged += new System.EventHandler(this.formsDataGridView_SelectionChanged);
             // 
             // treeViewControls
             // 
             this.treeViewControls.Dock = System.Windows.Forms.DockStyle.Fill;
             this.treeViewControls.Location = new System.Drawing.Point(0, 0);
             this.treeViewControls.Name = "treeViewControls";
-            this.treeViewControls.Size = new System.Drawing.Size(739, 716);
+            this.treeViewControls.Size = new System.Drawing.Size(714, 716);
             this.treeViewControls.TabIndex = 0;
             // 
             // controlsPanel
@@ -119,6 +149,50 @@ namespace WindowsFormsExplorer.Views
             this.btnRefresh.TextAlign = System.Drawing.ContentAlignment.MiddleRight;
             this.btnRefresh.Click += new System.EventHandler(this.btnRefresh_Click);
             // 
+            // colName
+            // 
+            dataGridViewCellStyle1.WrapMode = System.Windows.Forms.DataGridViewTriState.True;
+            this.colName.DefaultCellStyle = dataGridViewCellStyle1;
+            this.colName.HeaderText = "Name";
+            this.colName.Name = "colName";
+            this.colName.ReadOnly = true;
+            // 
+            // colType
+            // 
+            dataGridViewCellStyle2.WrapMode = System.Windows.Forms.DataGridViewTriState.True;
+            this.colType.DefaultCellStyle = dataGridViewCellStyle2;
+            this.colType.HeaderText = "Type";
+            this.colType.Name = "colType";
+            this.colType.ReadOnly = true;
+            // 
+            // colText
+            // 
+            dataGridViewCellStyle3.WrapMode = System.Windows.Forms.DataGridViewTriState.True;
+            this.colText.DefaultCellStyle = dataGridViewCellStyle3;
+            this.colText.HeaderText = "Text";
+            this.colText.Name = "colText";
+            this.colText.ReadOnly = true;
+            // 
+            // colVisible
+            // 
+            dataGridViewCellStyle4.WrapMode = System.Windows.Forms.DataGridViewTriState.True;
+            this.colVisible.DefaultCellStyle = dataGridViewCellStyle4;
+            this.colVisible.HeaderText = "Visible";
+            this.colVisible.Name = "colVisible";
+            this.colVisible.ReadOnly = true;
+            this.colVisible.Resizable = System.Windows.Forms.DataGridViewTriState.True;
+            this.colVisible.SortMode = System.Windows.Forms.DataGridViewColumnSortMode.NotSortable;
+            // 
+            // colHandle
+            // 
+            dataGridViewCellStyle5.WrapMode = System.Windows.Forms.DataGridViewTriState.True;
+            this.colHandle.DefaultCellStyle = dataGridViewCellStyle5;
+            this.colHandle.HeaderText = "Handle";
+            this.colHandle.Name = "colHandle";
+            this.colHandle.ReadOnly = true;
+            this.colHandle.Resizable = System.Windows.Forms.DataGridViewTriState.True;
+            this.colHandle.SortMode = System.Windows.Forms.DataGridViewColumnSortMode.NotSortable;
+            // 
             // MainForm
             // 
             this.ClientSize = new System.Drawing.Size(1184, 761);
@@ -133,6 +207,7 @@ namespace WindowsFormsExplorer.Views
             this.splitContainer.Panel2.ResumeLayout(false);
             ((System.ComponentModel.ISupportInitialize)(this.splitContainer)).EndInit();
             this.splitContainer.ResumeLayout(false);
+            ((System.ComponentModel.ISupportInitialize)(this.formsDataGridView)).EndInit();
             this.controlsPanel.ResumeLayout(false);
             this.ResumeLayout(false);
 
@@ -143,9 +218,14 @@ namespace WindowsFormsExplorer.Views
         private Panel controlsPanel;
         private Button btnConnect;
         private Button btnRefresh;
-        private ListView listViewForms;
+        private DataGridView formsDataGridView;
         private TreeView treeViewControls;
         private SplitContainer splitContainer;
+        private DataGridViewTextBoxColumn colName;
+        private DataGridViewTextBoxColumn colType;
+        private DataGridViewTextBoxColumn colText;
+        private DataGridViewTextBoxColumn colVisible;
+        private DataGridViewTextBoxColumn colHandle;
     }
 
 }
