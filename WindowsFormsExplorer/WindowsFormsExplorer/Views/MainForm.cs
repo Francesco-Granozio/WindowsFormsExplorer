@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Diagnostics.Contracts;
 using System.Runtime.InteropServices;
 using System.Runtime.InteropServices.ComTypes;
+using System.Security.Policy;
 using System.Windows.Forms;
 using System.Xml.Linq;
 using WindowsFormsExplorer.Domain;
@@ -22,13 +23,6 @@ namespace WindowsFormsExplorer.Views
         {
             InitializeComponent();
         }
-
-
-        [DllImport("ole32.dll")]
-        private static extern int GetRunningObjectTable(int reserved, out IRunningObjectTable pprot);
-
-        [DllImport("ole32.dll")]
-        private static extern int CreateBindCtx(int reserved, out IBindCtx ppbc);
 
 
         private void MainForm_Load(object sender, EventArgs e)
@@ -138,7 +132,6 @@ namespace WindowsFormsExplorer.Views
         }
 
 
-
         private void RefreshOpenForms()
         {
             formsDataGridView.Rows.Clear();
@@ -189,13 +182,13 @@ namespace WindowsFormsExplorer.Views
                 }
                 catch (Exception ex)
                 {
-                    MessageBox.Show("Error", $"Error in accessing threads: {ex.Message}", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                    MessageBox.Show($"Error in accessing threads: {ex.Message}", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
                     return;
                 }
             }
             catch (Exception ex)
             {
-                MessageBox.Show("Error", $"Error while reading forms: {ex.Message}", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                MessageBox.Show($"Error while reading forms: {ex.Message}", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
             }
         }
 
@@ -221,22 +214,23 @@ namespace WindowsFormsExplorer.Views
             try
             {
                 string baseExpr = $"System.Windows.Forms.Application.OpenForms[{formIndex}]";
-                EnvDTE.Expression formExpr = m_Debugger.DTE.Debugger.GetExpression(baseExpr);
+                string formExpressionStr = m_Debugger.GetExpressionValue(baseExpr);
 
-                if (formExpr != null)
+                if (string.IsNullOrEmpty(formExpressionStr))
+                    return;
+
+                TreeNode rootNode = new TreeNode(m_Debugger.GetExpressionValue($"{baseExpr}.Name") ?? $"Form_{formIndex}")
                 {
-                    TreeNode rootNode = new TreeNode(m_Debugger.GetExpressionValue($"{baseExpr}.Name") ?? $"Form_{formIndex}")
-                    {
-                        Tag = baseExpr
-                    };
-                    ExploreControlsRecursively(baseExpr, rootNode);
-                    treeViewControls.Nodes.Add(rootNode);
-                    rootNode.Expand();
-                }
+                    Tag = baseExpr
+                };
+                ExploreControlsRecursively(baseExpr, rootNode);
+                treeViewControls.Nodes.Add(rootNode);
+                rootNode.Expand();
+
             }
             catch (Exception ex)
             {
-                MessageBox.Show("Error", $"Error while exploring controls: {ex.Message}", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                MessageBox.Show($"Error while exploring controls: {ex.Message}", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
             }
             finally
             {
@@ -371,9 +365,7 @@ namespace WindowsFormsExplorer.Views
             }
         }
 
-
-
-
+        
         private void btnRefresh_Click(object sender, EventArgs e)
         {
             try
