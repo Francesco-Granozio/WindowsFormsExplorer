@@ -46,8 +46,12 @@ namespace WindowsFormsExplorer.Views
             try
             {
 
-                ConnectToProcess();
-                RefreshOpenForms();
+                bool canLoad = ConnectToProcess();
+
+                if (canLoad)
+                {
+                    RefreshOpenForms();
+                }
             }
             catch (Exception ex)
             {
@@ -56,7 +60,7 @@ namespace WindowsFormsExplorer.Views
         }
 
 
-        private void ConnectToProcess()
+        private bool ConnectToProcess()
         {
             try
             {
@@ -77,15 +81,15 @@ namespace WindowsFormsExplorer.Views
                 );
 
                 if (visualStudioInstancesResult.IsFailure)
-                    return;
+                    return false;
 
 
                 VSInstanceSelectorForm vsInstanceSelectorForm = new VSInstanceSelectorForm(visualStudioInstancesResult.Value);
 
                 if (vsInstanceSelectorForm.ShowDialog() == DialogResult.Cancel)
                 {
-                    MessageBox.Show("No instance selected.", "Warning", MessageBoxButtons.OK, MessageBoxIcon.Warning);
-                    return;
+                    //MessageBox.Show("No instance selected.", "Warning", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                    return false;
                 }
 
                 //Mostra una finestra di dialogo per scegliere l'istanza
@@ -96,13 +100,13 @@ namespace WindowsFormsExplorer.Views
                 DialogResult dialogResult = processSelectorForm.ShowDialog();
                 if (dialogResult == DialogResult.Cancel)
                 {
-                    MessageBox.Show("No process selected.", "Warning", MessageBoxButtons.OK, MessageBoxIcon.Warning);
-                    return;
+                    //MessageBox.Show("No process selected.", "Warning", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                    return false;
                 }
                 else if (dialogResult == DialogResult.Abort)
                 {
                     MessageBox.Show("No debug processes found in the selected instance.", "Warning", MessageBoxButtons.OK, MessageBoxIcon.Warning);
-                    return;
+                    return false;
                 }
 
                 int selectedPID = processSelectorForm.SelectedProcess.ProcessID;
@@ -122,14 +126,15 @@ namespace WindowsFormsExplorer.Views
 
                 if (!isDebugging)
                 {
-                    throw new Exception("Selected process MUST be in debug mode!");
+                    MessageBox.Show("Selected process MUST be in debug mode!", "Warning", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                    return false;
                 }
             }
             catch (COMException ex)
             {
-                MessageBox.Show("Error", $"Error while connecting to debugger: {ex.Message}", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                MessageBox.Show($"Error while connecting to debugger: {ex.Message}", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
             }
-
+            return true;
         }
 
 

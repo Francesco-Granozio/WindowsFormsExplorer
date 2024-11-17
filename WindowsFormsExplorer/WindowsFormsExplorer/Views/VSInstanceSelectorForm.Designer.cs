@@ -30,14 +30,17 @@ namespace WindowsFormsExplorer.Views
         /// </summary>
         private void InitializeComponent()
         {
+            System.Windows.Forms.DataGridViewCellStyle dataGridViewCellStyle4 = new System.Windows.Forms.DataGridViewCellStyle();
             System.Windows.Forms.DataGridViewCellStyle dataGridViewCellStyle1 = new System.Windows.Forms.DataGridViewCellStyle();
+            System.Windows.Forms.DataGridViewCellStyle dataGridViewCellStyle2 = new System.Windows.Forms.DataGridViewCellStyle();
+            System.Windows.Forms.DataGridViewCellStyle dataGridViewCellStyle3 = new System.Windows.Forms.DataGridViewCellStyle();
             System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(VSInstanceSelectorForm));
             this.instancesDataGridView = new System.Windows.Forms.DataGridView();
+            this.panel1 = new System.Windows.Forms.Panel();
+            this.selectBtn = new System.Windows.Forms.Button();
             this.colInstanceNumber = new System.Windows.Forms.DataGridViewTextBoxColumn();
             this.colIstanceName = new System.Windows.Forms.DataGridViewTextBoxColumn();
             this.colOpeneSolution = new System.Windows.Forms.DataGridViewCheckBoxColumn();
-            this.panel1 = new System.Windows.Forms.Panel();
-            this.selectBtn = new System.Windows.Forms.Button();
             ((System.ComponentModel.ISupportInitialize)(this.instancesDataGridView)).BeginInit();
             this.panel1.SuspendLayout();
             this.SuspendLayout();
@@ -53,14 +56,14 @@ namespace WindowsFormsExplorer.Views
             this.colInstanceNumber,
             this.colIstanceName,
             this.colOpeneSolution});
-            dataGridViewCellStyle1.Alignment = System.Windows.Forms.DataGridViewContentAlignment.MiddleLeft;
-            dataGridViewCellStyle1.BackColor = System.Drawing.SystemColors.Window;
-            dataGridViewCellStyle1.Font = new System.Drawing.Font("Microsoft Sans Serif", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            dataGridViewCellStyle1.ForeColor = System.Drawing.SystemColors.ControlText;
-            dataGridViewCellStyle1.SelectionBackColor = System.Drawing.SystemColors.Highlight;
-            dataGridViewCellStyle1.SelectionForeColor = System.Drawing.SystemColors.HighlightText;
-            dataGridViewCellStyle1.WrapMode = System.Windows.Forms.DataGridViewTriState.True;
-            this.instancesDataGridView.DefaultCellStyle = dataGridViewCellStyle1;
+            dataGridViewCellStyle4.Alignment = System.Windows.Forms.DataGridViewContentAlignment.MiddleLeft;
+            dataGridViewCellStyle4.BackColor = System.Drawing.SystemColors.Window;
+            dataGridViewCellStyle4.Font = new System.Drawing.Font("Microsoft Sans Serif", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            dataGridViewCellStyle4.ForeColor = System.Drawing.SystemColors.ControlText;
+            dataGridViewCellStyle4.SelectionBackColor = System.Drawing.SystemColors.Highlight;
+            dataGridViewCellStyle4.SelectionForeColor = System.Drawing.SystemColors.HighlightText;
+            dataGridViewCellStyle4.WrapMode = System.Windows.Forms.DataGridViewTriState.True;
+            this.instancesDataGridView.DefaultCellStyle = dataGridViewCellStyle4;
             this.instancesDataGridView.Dock = System.Windows.Forms.DockStyle.Fill;
             this.instancesDataGridView.Location = new System.Drawing.Point(0, 0);
             this.instancesDataGridView.MultiSelect = false;
@@ -70,29 +73,6 @@ namespace WindowsFormsExplorer.Views
             this.instancesDataGridView.SelectionMode = System.Windows.Forms.DataGridViewSelectionMode.FullRowSelect;
             this.instancesDataGridView.Size = new System.Drawing.Size(658, 381);
             this.instancesDataGridView.TabIndex = 0;
-            // 
-            // colInstanceNumber
-            // 
-            this.colInstanceNumber.AutoSizeMode = System.Windows.Forms.DataGridViewAutoSizeColumnMode.ColumnHeader;
-            this.colInstanceNumber.FillWeight = 189.6907F;
-            this.colInstanceNumber.HeaderText = "Instance";
-            this.colInstanceNumber.Name = "colInstanceNumber";
-            this.colInstanceNumber.ReadOnly = true;
-            this.colInstanceNumber.Width = 73;
-            // 
-            // colIstanceName
-            // 
-            this.colIstanceName.AutoSizeMode = System.Windows.Forms.DataGridViewAutoSizeColumnMode.Fill;
-            this.colIstanceName.FillWeight = 10.30928F;
-            this.colIstanceName.HeaderText = "Name";
-            this.colIstanceName.Name = "colIstanceName";
-            this.colIstanceName.ReadOnly = true;
-            // 
-            // colOpeneSolution
-            // 
-            this.colOpeneSolution.HeaderText = "Opened solution";
-            this.colOpeneSolution.Name = "colOpeneSolution";
-            this.colOpeneSolution.ReadOnly = true;
             // 
             // panel1
             // 
@@ -118,6 +98,37 @@ namespace WindowsFormsExplorer.Views
             this.selectBtn.TextAlign = System.Drawing.ContentAlignment.MiddleRight;
             this.selectBtn.UseVisualStyleBackColor = true;
             this.selectBtn.Click += new System.EventHandler(this.selectBtn_Click);
+            // 
+            // colInstanceNumber
+            // 
+            this.colInstanceNumber.AutoSizeMode = System.Windows.Forms.DataGridViewAutoSizeColumnMode.ColumnHeader;
+            dataGridViewCellStyle1.WrapMode = System.Windows.Forms.DataGridViewTriState.True;
+            this.colInstanceNumber.DefaultCellStyle = dataGridViewCellStyle1;
+            this.colInstanceNumber.FillWeight = 189.6907F;
+            this.colInstanceNumber.HeaderText = "Instance";
+            this.colInstanceNumber.Name = "colInstanceNumber";
+            this.colInstanceNumber.ReadOnly = true;
+            this.colInstanceNumber.Width = 73;
+            // 
+            // colIstanceName
+            // 
+            this.colIstanceName.AutoSizeMode = System.Windows.Forms.DataGridViewAutoSizeColumnMode.Fill;
+            dataGridViewCellStyle2.WrapMode = System.Windows.Forms.DataGridViewTriState.True;
+            this.colIstanceName.DefaultCellStyle = dataGridViewCellStyle2;
+            this.colIstanceName.FillWeight = 10.30928F;
+            this.colIstanceName.HeaderText = "Name";
+            this.colIstanceName.Name = "colIstanceName";
+            this.colIstanceName.ReadOnly = true;
+            // 
+            // colOpeneSolution
+            // 
+            dataGridViewCellStyle3.Alignment = System.Windows.Forms.DataGridViewContentAlignment.MiddleCenter;
+            dataGridViewCellStyle3.NullValue = false;
+            dataGridViewCellStyle3.WrapMode = System.Windows.Forms.DataGridViewTriState.True;
+            this.colOpeneSolution.DefaultCellStyle = dataGridViewCellStyle3;
+            this.colOpeneSolution.HeaderText = "Opened solution";
+            this.colOpeneSolution.Name = "colOpeneSolution";
+            this.colOpeneSolution.ReadOnly = true;
             // 
             // VSInstanceSelectorForm
             // 
