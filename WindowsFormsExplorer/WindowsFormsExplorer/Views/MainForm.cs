@@ -84,56 +84,29 @@ namespace WindowsFormsExplorer.Views
 
                 if (vsInstanceSelectorForm.ShowDialog() == DialogResult.Cancel)
                 {
-                    MessageBox.Show("Warning", "No instance selected.", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                    MessageBox.Show("No instance selected.", "Warning", MessageBoxButtons.OK, MessageBoxIcon.Warning);
                     return;
                 }
 
                 //Mostra una finestra di dialogo per scegliere l'istanza
                 dte = vsInstanceSelectorForm.SelectedInstance;
 
+                ProcessSelectorForm processSelectorForm = new ProcessSelectorForm(dte.Debugger.DebuggedProcesses);
 
-                List<string> processInfoList = new List<string>();
-                foreach (EnvDTE80.Process2 proc in dte.Debugger.DebuggedProcesses)
+                DialogResult dialogResult = processSelectorForm.ShowDialog();
+                if (dialogResult == DialogResult.Cancel)
                 {
-                    processInfoList.Add($"PID: {proc.ProcessID} - Name: {proc.Name}");
+                    MessageBox.Show("No process selected.", "Warning", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                    return;
                 }
-
-                if (processInfoList.Count == 0)
+                else if (dialogResult == DialogResult.Abort)
                 {
-                    MessageBox.Show("Warning", "No debug processes found in the selected instance.", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                    MessageBox.Show("No debug processes found in the selected instance.", "Warning", MessageBoxButtons.OK, MessageBoxIcon.Warning);
                     return;
                 }
 
-                int selectedPID = 0;
-
-                using (Form form = new Form())
-                {
-                    ListBox listBox = new ListBox();
-                    listBox.Items.AddRange(processInfoList.ToArray());
-                    listBox.Dock = DockStyle.Fill;
-                    form.Controls.Add(listBox);
-                    form.Text = "Select a process in debug";
-                    form.ClientSize = new System.Drawing.Size(400, 300);
-
-                    Button okButton = new Button() { Text = "OK", DialogResult = DialogResult.OK, Dock = DockStyle.Bottom };
-                    form.Controls.Add(okButton);
-                    form.AcceptButton = okButton;
-
-                    if (form.ShowDialog() == DialogResult.OK && listBox.SelectedIndex >= 0)
-                    {
-                        // Estrai il PID selezionato dall'utente
-                        string selectedProcessInfo = listBox.SelectedItem.ToString();
-                        selectedPID = int.Parse(selectedProcessInfo.Split(' ')[1]); // Estrarre il PID
-
-                        targetProcess = System.Diagnostics.Process.GetProcessById(selectedPID);
-                    }
-                }
-
-                if (selectedPID <= 0)
-                {
-                    MessageBox.Show("Warning", "Invalid PID.", MessageBoxButtons.OK, MessageBoxIcon.Warning);
-                    return;
-                }
+                int selectedPID = processSelectorForm.SelectedProcess.ProcessID;
+                targetProcess = System.Diagnostics.Process.GetProcessById(selectedPID);
 
 
                 // Verifica che il processo sia in debug

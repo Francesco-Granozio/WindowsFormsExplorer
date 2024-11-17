@@ -17,7 +17,7 @@ namespace WindowsFormsExplorer.Views
     /// </summary>
     public partial class VSInstanceSelectorForm : Form
     {
-        private IReadOnlyList<EnvDTE80.DTE2> m_Instances;
+        private readonly IReadOnlyList<EnvDTE80.DTE2> m_Instances;
         public EnvDTE80.DTE2 SelectedInstance { get; private set; }
 
 
@@ -35,7 +35,7 @@ namespace WindowsFormsExplorer.Views
 
         private void LoadGrid()
         {
-            int i = 0; ;
+            int i = 0;
             foreach (EnvDTE80.DTE2 instance in m_Instances)
             {
 
