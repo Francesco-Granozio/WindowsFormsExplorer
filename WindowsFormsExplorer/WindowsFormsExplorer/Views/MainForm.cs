@@ -4,9 +4,11 @@ using System.Diagnostics.Contracts;
 using System.Runtime.InteropServices;
 using System.Runtime.InteropServices.ComTypes;
 using System.Windows.Forms;
+using System.Xml.Linq;
 using WindowsFormsExplorer.Domain;
 using WindowsFormsExplorer.Services;
 using WindowsFormsExplorer.Utility;
+using static System.Net.Mime.MediaTypeNames;
 
 namespace WindowsFormsExplorer.Views
 {
@@ -69,7 +71,7 @@ namespace WindowsFormsExplorer.Views
                 var visualStudioInstancesResult = processInspector.GetVisualStudioInstances();
 
                 visualStudioInstancesResult.Match(
-                    onSuccess: instances => { },
+                    onSuccess: _ => { },
                     onFailure: error =>
                     {
                         if (error.IsIn(ErrorCode.Exception, ErrorCode.DebuggerConnectionError))
@@ -153,55 +155,37 @@ namespace WindowsFormsExplorer.Views
                 // Accedo alla collezione threads in modo sicuro
                 try
                 {
-                    // Seleziono il primo thread disponibile
+                    int formCount = 0;
+                    var canQueryDebugger = m_Debugger.CanQuery(ref formCount);
 
-                    if (!m_Debugger.HasThreads)
+                    canQueryDebugger.Match(
+                    onSuccess: _ => { },
+                    onFailure: error =>
                     {
-                        MessageBox.Show("Warning", "No threads available in the process!", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                        if (error.Is(ErrorCode.Exception))
+                            MessageBox.Show(error.Message, "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+
+                        else if (
+                            error.IsIn(
+                                ErrorCode.NoThreadsAvailableInProcess,
+                                ErrorCode.DebuggerMustBePaused,
+                                ErrorCode.UnableToGetFormCount,
+                                ErrorCode.UnableToGetFormCount
+                                )
+                            )
+                            MessageBox.Show(error.Message, "Warning", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                    }
+                    );
+
+                    if (canQueryDebugger.IsFailure)
                         return;
-                    }
 
-                    // Il debugger deve essere in pausa
-                    if (m_Debugger.DTE.Debugger.CurrentMode != EnvDTE.dbgDebugMode.dbgBreakMode)
+                    foreach (FormInfo formInfo in m_Debugger.GetFormInfo(formCount))
                     {
-                        MessageBox.Show("Warning", "The debugger MUST be in pause (break) mode!", MessageBoxButtons.OK, MessageBoxIcon.Warning);
-                        return;
+                        m_FormInfos.Add(formInfo);
+                        formsDataGridView.Rows.Add(formInfo.Name, formInfo.Type, formInfo.Text, formInfo.Visible, formInfo.Handle);
                     }
 
-                    string formCountStr = m_Debugger.GetExpressionValue("System.Windows.Forms.Application.OpenForms.Count");
-
-
-                    if (string.IsNullOrEmpty(formCountStr))
-                    {
-                        MessageBox.Show("Warning", "Unable to get form count!", MessageBoxButtons.OK, MessageBoxIcon.Warning);
-                        return;
-                    }
-
-                    if (!int.TryParse(formCountStr, out int formCount))
-                    {
-                        MessageBox.Show("Warning", $"Invalid count value: {formCountStr}", MessageBoxButtons.OK, MessageBoxIcon.Warning);
-                        return;
-                    }
-
-                    for (int i = 0; i < formCount; i++)
-                    {
-                        string baseExpr = $"System.Windows.Forms.Application.OpenForms[{i}]";
-
-                        EnvDTE.Expression formExpr = m_Debugger.DTE.Debugger.GetExpression(baseExpr);
-                        if (formExpr == null)
-                        {
-                            continue;
-                        }
-
-                        string text = m_Debugger.GetExpressionValue($"{baseExpr}.Text") ?? "N/A";
-                        string type = formExpr.Type ?? "N/A";
-                        string visible = m_Debugger.GetExpressionValue($"{baseExpr}.Visible") ?? "N/A";
-                        string handle = m_Debugger.GetExpressionValue($"{baseExpr}.Handle.ToInt32()") ?? "N/A";
-                        string name = m_Debugger.GetExpressionValue($"{baseExpr}.Name") ?? $"Form_{i}";
-
-                        formsDataGridView.Rows.Add(name, type, text, visible, handle);
-                        m_FormInfos.Add(new FormInfo(name, type, text, visible, handle));
-                    }
                 }
                 catch (Exception ex)
                 {
@@ -415,7 +399,7 @@ namespace WindowsFormsExplorer.Views
             try
             {
                 base.OnFormClosing(e);
-                m_Debugger.ReleaseDTE();
+                m_Debugger?.ReleaseDTE();
             }
             finally
             {

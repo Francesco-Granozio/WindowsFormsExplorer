@@ -12,7 +12,14 @@ namespace WindowsFormsExplorer.Utility
         NoDebugProcessFound,
         InvaliidPID,
         ProcessMustBeInDebugMode,
-        DebuggerConnectionError
+        DebuggerConnectionError,
+
+
+
+        NoThreadsAvailableInProcess,
+        DebuggerMustBePaused,
+        UnableToGetFormCount,
+        InvalidFormCountValue,
     }
 
 
