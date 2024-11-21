@@ -94,6 +94,7 @@
   <ItemGroup>
     <Compile Include="Domain\FormInfo.cs" />
     <Compile Include="Services\Debugger.cs" />
+    <Compile Include="Services\DebuggerAPI.cs" />
     <Compile Include="Views\MainForm.cs">
       <SubType>Form</SubType>
     </Compile>
