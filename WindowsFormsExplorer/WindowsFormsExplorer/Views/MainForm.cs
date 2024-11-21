@@ -33,15 +33,15 @@ namespace WindowsFormsExplorer.Views
         private void btnConnect_Click(object sender, EventArgs e)
         {
 
-            DebuggerAPI.GetRunningVisualStudioInstances(out long len, out IntPtr data);
+            int result = DebuggerAPI.GetRunningVisualStudioInstances(out long len, out IntPtr data);
 
             if (len > 0)
             {
-                VSInstance[] instances = new VSInstance[len];
+                VisualStudioInstance[] instances = new VisualStudioInstance[len];
                 for (long i = 0; i < len; i++)
                 {
-                    IntPtr instancePtr = IntPtr.Add(data, (int)(i * Marshal.SizeOf(typeof(VSInstance))));
-                    instances[i] = Marshal.PtrToStructure<VSInstance>(instancePtr);
+                    IntPtr instancePtr = IntPtr.Add(data, (int)(i * Marshal.SizeOf(typeof(VisualStudioInstance))));
+                    instances[i] = Marshal.PtrToStructure<VisualStudioInstance>(instancePtr);
                 }
 
             }

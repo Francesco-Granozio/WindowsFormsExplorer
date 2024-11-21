@@ -7,18 +7,18 @@ using System.Threading.Tasks;
 
 namespace WindowsFormsExplorer.Services
 {
-    [StructLayout(LayoutKind.Sequential, CharSet = CharSet.Unicode)]
-    public struct VSInstance
+    [StructLayout(LayoutKind.Sequential, CharSet = CharSet.Unicode, Pack = 1)]
+    public struct VisualStudioInstance
     {
         [MarshalAs(UnmanagedType.ByValTStr, SizeConst = 256)]
         public string Name;
         public bool IsOpen;
     }
 
+
     public static class DebuggerAPI
     {
         [DllImport("DebuggerAPI.dll", CharSet = CharSet.Unicode, CallingConvention = CallingConvention.Cdecl)]
         public static extern int GetRunningVisualStudioInstances(out long len, out IntPtr data);
-
     }
 }

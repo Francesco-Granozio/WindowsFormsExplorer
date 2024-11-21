@@ -74,44 +74,64 @@ int GetSolutionInfo(VisualStudioInstanceInfo& instance)
 
 		hr = instance.dispatch->Invoke(dispidSolution, IID_NULL, LOCALE_USER_DEFAULT, DISPATCH_PROPERTYGET,
 			&dispparamsNoArgs, &result, NULL, NULL);
-
-		if (SUCCEEDED(hr) && result.vt == VT_DISPATCH && result.pdispVal != nullptr) {
-			IDispatch* pSolution = result.pdispVal;
-
-			// Get IsOpen
-			DISPID dispidIsOpen;
-			memberName = (OLECHAR*)L"IsOpen";
-			hr = pSolution->GetIDsOfNames(IID_NULL, &memberName, 1, LOCALE_USER_DEFAULT, &dispidIsOpen);
-			if (SUCCEEDED(hr)) {
-				VARIANT varIsOpen;
-				VariantInit(&varIsOpen);
-				hr = pSolution->Invoke(dispidIsOpen, IID_NULL, LOCALE_USER_DEFAULT, DISPATCH_PROPERTYGET,
-					&dispparamsNoArgs, &varIsOpen, NULL, NULL);
-				if (SUCCEEDED(hr) && varIsOpen.vt == VT_BOOL) {
-					instance.isOpen = varIsOpen.boolVal != VARIANT_FALSE;
-				}
-				VariantClear(&varIsOpen);
-			}
-
-			// Get FullName if solution is open
-			if (instance.isOpen) {
-				DISPID dispidFullName;
-				memberName = (OLECHAR*)L"FullName";
-				hr = pSolution->GetIDsOfNames(IID_NULL, &memberName, 1, LOCALE_USER_DEFAULT, &dispidFullName);
-				if (SUCCEEDED(hr)) {
-					VARIANT varFullName;
-					VariantInit(&varFullName);
-					hr = pSolution->Invoke(dispidFullName, IID_NULL, LOCALE_USER_DEFAULT, DISPATCH_PROPERTYGET,
-						&dispparamsNoArgs, &varFullName, NULL, NULL);
-					if (SUCCEEDED(hr) && varFullName.vt == VT_BSTR) {
-						wcscpy_s(instance.name, varFullName.bstrVal);
-					}
-					VariantClear(&varFullName);
-				}
-			}
-
-			pSolution->Release();
+		if (FAILED(hr) || result.vt != VT_DISPATCH || result.pdispVal == nullptr) {
+			VariantClear(&result);
+			return -2;  // Non sono riuscito ad ottenere l'oggetto soluzione
 		}
+
+		IDispatch* pSolution = result.pdispVal;
+
+		// Get IsOpen
+		DISPID dispidIsOpen;
+		memberName = (OLECHAR*)L"IsOpen";
+		hr = pSolution->GetIDsOfNames(IID_NULL, &memberName, 1, LOCALE_USER_DEFAULT, &dispidIsOpen);
+		if (FAILED(hr)) {
+			pSolution->Release();
+			VariantClear(&result);
+			return -2;
+		}
+
+		VARIANT varIsOpen;
+		VariantInit(&varIsOpen);
+		hr = pSolution->Invoke(dispidIsOpen, IID_NULL, LOCALE_USER_DEFAULT, DISPATCH_PROPERTYGET,
+			&dispparamsNoArgs, &varIsOpen, NULL, NULL);
+		if (FAILED(hr) || varIsOpen.vt != VT_BOOL) {
+			VariantClear(&varIsOpen);
+			pSolution->Release();
+			VariantClear(&result);
+			return -2;
+		}
+
+		instance.isOpen = varIsOpen.boolVal != VARIANT_FALSE;
+		VariantClear(&varIsOpen);
+
+		// Get FullName solo se la soluzione è apperta
+		if (instance.isOpen) {
+			DISPID dispidFullName;
+			memberName = (OLECHAR*)L"FullName";
+			hr = pSolution->GetIDsOfNames(IID_NULL, &memberName, 1, LOCALE_USER_DEFAULT, &dispidFullName);
+			if (FAILED(hr)) {
+				pSolution->Release();
+				VariantClear(&result);
+				return -2;
+			}
+
+			VARIANT varFullName;
+			VariantInit(&varFullName);
+			hr = pSolution->Invoke(dispidFullName, IID_NULL, LOCALE_USER_DEFAULT, DISPATCH_PROPERTYGET,
+				&dispparamsNoArgs, &varFullName, NULL, NULL);
+			if (FAILED(hr) || varFullName.vt != VT_BSTR) {
+				VariantClear(&varFullName);
+				pSolution->Release();
+				VariantClear(&result);
+				return -2;
+			}
+
+			wcscpy_s(instance.name, varFullName.bstrVal);
+			VariantClear(&varFullName);
+		}
+
+		pSolution->Release();
 		VariantClear(&result);
 	}
 	catch (_com_error& e) {
@@ -122,7 +142,10 @@ int GetSolutionInfo(VisualStudioInstanceInfo& instance)
 		std::wcout << L"Unknown error occurred" << std::endl;
 		return -4;
 	}
+
+	return 0;
 }
+
 
 
 //Il metodo recupera prima il numero di istanze 
@@ -132,60 +155,75 @@ std::vector<VisualStudioInstanceInfo> GetRunningVisualStudioInstancesCore()
 	IRunningObjectTable* pROT = nullptr;
 	IEnumMoniker* pEnumMoniker = nullptr;
 
-	if (GetRunningObjectTable(0, &pROT) != S_OK)
-	{
+	// Recupera il Running Object Table
+	if (GetRunningObjectTable(0, &pROT) != S_OK) {
 		std::wcout << L"Error while retrieving Running Object Table: " << GetLastErrorAsString() << std::endl;
-		return instances;
+		return instances; 
 	}
 
-	if (pROT->EnumRunning(&pEnumMoniker) != S_OK)
-	{
+	// Recupera l'enumeratore degli oggetti in esecuzione
+	if (pROT->EnumRunning(&pEnumMoniker) != S_OK) {
 		std::wcout << L"Errore nel recuperare l'enumeratore degli oggetti in esecuzione: " << GetLastErrorAsString() << std::endl;
 		pROT->Release();
 		return instances;
 	}
 
+	// Reset dell'enumeratore
 	pEnumMoniker->Reset();
 	IMoniker* pMoniker = nullptr;
 	ULONG fetched = 0;
 
+	// Ciclo attraverso gli oggetti in esecuzione
 	while (pEnumMoniker->Next(1, &pMoniker, &fetched) == S_OK)
 	{
 		CComPtr<IBindCtx> pBindCtx;
 		CreateBindCtx(0, &pBindCtx);
 		LPOLESTR displayName = nullptr;
 
-		if (pMoniker->GetDisplayName(pBindCtx, nullptr, &displayName) == S_OK)
-		{
-			std::wstring ws(displayName);
-			std::wcout << L"Found ROT entry: " << ws << std::endl;
-
-			if (ws.find(L"!VisualStudio.DTE") != std::wstring::npos)
-			{
-				IUnknown* pObj = nullptr;
-				HRESULT hr = pROT->GetObject(pMoniker, &pObj);
-				if (SUCCEEDED(hr) && pObj != nullptr)
-				{
-					IDispatch* pDispatch = nullptr;
-					hr = pObj->QueryInterface(IID_IDispatch, (void**)&pDispatch);
-					if (SUCCEEDED(hr) && pDispatch != nullptr)
-					{
-						VisualStudioInstanceInfo instance(pDispatch, L"", false);
-						GetSolutionInfo(instance);
-
-						if (instance.dispatch != nullptr)
-						{
-							instance.dispatch->Release();
-						}
-
-						instances.emplace_back(instance);
-						std::wcout << L"Added VS instance from: " << ws << std::endl;
-					}
-					pObj->Release();
-				}
-			}
-			CoTaskMemFree(displayName);
+		// Recupera il nome dell'oggetto
+		if (pMoniker->GetDisplayName(pBindCtx, nullptr, &displayName) != S_OK) {
+			pMoniker->Release();
+			continue; 
 		}
+
+		std::wstring ws(displayName);
+		std::wcout << L"Found ROT entry: " << ws << std::endl;
+
+		// Se è una sessione Visual Studio
+		if (ws.find(L"!VisualStudio.DTE") != std::wstring::npos)
+		{
+			IUnknown* pObj = nullptr;
+			HRESULT hr = pROT->GetObject(pMoniker, &pObj);
+			if (FAILED(hr) || pObj == nullptr) {
+				CoTaskMemFree(displayName);
+				pMoniker->Release();
+				continue; // Ritorna al ciclo in caso di errore
+			}
+
+			IDispatch* pDispatch = nullptr;
+			hr = pObj->QueryInterface(IID_IDispatch, (void**)&pDispatch);
+			if (FAILED(hr) || pDispatch == nullptr) {
+				pObj->Release();
+				CoTaskMemFree(displayName);
+				pMoniker->Release();
+				continue; // Ritorna al ciclo in caso di errore
+			}
+
+			VisualStudioInstanceInfo instance(pDispatch, L"", false);
+			GetSolutionInfo(instance);
+
+			// Rilascia il dispatch prima di aggiungere l'istanza
+			if (instance.dispatch != nullptr) {
+				instance.dispatch->Release();
+			}
+
+			instances.emplace_back(instance);
+			std::wcout << L"Added VS instance from: " << ws << std::endl;
+
+			pObj->Release();
+		}
+
+		CoTaskMemFree(displayName);
 		pMoniker->Release();
 	}
 
@@ -193,6 +231,7 @@ std::vector<VisualStudioInstanceInfo> GetRunningVisualStudioInstancesCore()
 	pROT->Release();
 	return instances;
 }
+
 
 
 // Funzione principale per ottenere le istanze di Visual Studio
