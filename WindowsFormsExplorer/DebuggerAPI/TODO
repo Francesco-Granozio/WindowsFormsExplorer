@@ -1,0 +1,93 @@
+TODO:
+C++:
+extern "C" {
+    __declspec(dllexport) int GetRunningVisualStudioInstances(long* len, VisualStudioInstance** data);
+
+    //free function here
+    __declspec(dllexport) void FreeVisualStudioInstances(VisualStudioInstance* data);
+}
+
+
+extern "C" __declspec(dllexport) int GetRunningVisualStudioInstances(long* len, VisualStudioInstance** data) {
+    HRESULT hr = CoInitializeEx(nullptr, COINIT_MULTITHREADED);
+    if (FAILED(hr)) {
+        std::wcout << L"Failed to initialize COM: " << _com_error(hr).ErrorMessage() << std::endl;
+        return -1;
+    }
+
+    std::vector<VisualStudioInstanceInfo> temp_instances = GetRunningVisualStudioInstancesCore();
+    *len = static_cast<long>(temp_instances.size());
+
+    if (*len > 0) {
+        //  CoTaskMemAlloc instead of new
+        *data = (VisualStudioInstance*)CoTaskMemAlloc(*len * sizeof(VisualStudioInstance));
+        if (*data == nullptr) {
+            CoUninitialize();
+            return -1;
+        }
+
+        for (long i = 0; i < *len; i++) {
+            (*data)[i] = VisualStudioInstance(temp_instances[i]);
+        }
+    }
+    else {
+        *data = nullptr;
+    }
+
+    CoUninitialize();
+    return 0;
+}
+
+extern "C" __declspec(dllexport) void FreeVisualStudioInstances(VisualStudioInstance* data) {
+    if (data != nullptr) {
+        CoTaskMemFree(data);
+    }
+}
+
+C#:
+public class DebuggerAPI
+{
+    [StructLayout(LayoutKind.Sequential, CharSet = CharSet.Unicode)]
+    public struct VisualStudioInstance
+    {
+        [MarshalAs(UnmanagedType.ByValTStr, SizeConst = 256)]
+        public string Name;
+        public bool IsOpen;
+    }
+
+    [DllImport("DebuggerAPI.dll", CallingConvention = CallingConvention.Cdecl)]
+    public static extern int GetRunningVisualStudioInstances(out long len, out IntPtr data);
+
+    [DllImport("DebuggerAPI.dll", CallingConvention = CallingConvention.Cdecl)]
+    public static extern void FreeVisualStudioInstances(IntPtr data);
+
+    public static VisualStudioInstance[] GetInstances()
+    {
+        try
+        {
+            int result = GetRunningVisualStudioInstances(out long len, out IntPtr data);
+            if (result != 0 || len <= 0 || data == IntPtr.Zero)
+            {
+                return Array.Empty<VisualStudioInstance>();
+            }
+
+            VisualStudioInstance[] instances = new VisualStudioInstance[len];
+            int structSize = Marshal.SizeOf<VisualStudioInstance>();
+            
+            for (long i = 0; i < len; i++)
+            {
+                IntPtr elementPtr = IntPtr.Add(data, i * structSize);
+                instances[i] = Marshal.PtrToStructure<VisualStudioInstance>(elementPtr);
+            }
+
+            return instances;
+        }
+        finally
+        {
+            if (data != IntPtr.Zero)
+            {
+                FreeVisualStudioInstances(data);
+            }
+        }
+    }
+}
