@@ -14,5 +14,6 @@
 #include <string>
 #include <comdef.h>    // Per gestire HRESULT e _com_error
 #include <atlbase.h>   // Per CComPtr
+#include "Logger.h"
 
 #endif //PCH_H

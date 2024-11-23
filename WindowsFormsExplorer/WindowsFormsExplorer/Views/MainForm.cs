@@ -32,39 +32,24 @@ namespace WindowsFormsExplorer.Views
 
         private void btnConnect_Click(object sender, EventArgs e)
         {
-
-            int result = DebuggerAPI.GetRunningVisualStudioInstances(out long len, out IntPtr data);
-
-            if (len > 0)
+            try
             {
-                VisualStudioInstance[] instances = new VisualStudioInstance[len];
-                for (long i = 0; i < len; i++)
+
+                ConnectToProcess();
+
+                if (m_CanLoad)
                 {
-                    IntPtr instancePtr = IntPtr.Add(data, (int)(i * Marshal.SizeOf(typeof(VisualStudioInstance))));
-                    instances[i] = Marshal.PtrToStructure<VisualStudioInstance>(instancePtr);
+                    RefreshOpenForms();
                 }
-
+                else
+                {
+                    MessageBox.Show($"You must first connect to the debugger", "Warning", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                }
             }
-            // TODO: Vedere dove deallocare la memmoria
-            Marshal.FreeCoTaskMem(data);
-            //try
-            //{
-
-            //    ConnectToProcess();
-
-            //    if (m_CanLoad)
-            //    {
-            //        RefreshOpenForms();
-            //    }
-            //    else
-            //    {
-            //        MessageBox.Show($"You must first connect to the debugger", "Warning", MessageBoxButtons.OK, MessageBoxIcon.Warning);
-            //    }
-            //}
-            //catch (Exception ex)
-            //{
-            //    MessageBox.Show($"Error while connecting to debugger: {ex.Message}", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
-            //}
+            catch (Exception ex)
+            {
+                MessageBox.Show($"Error while connecting to debugger: {ex.Message}", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            }
 
         }
 

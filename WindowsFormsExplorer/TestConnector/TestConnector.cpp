@@ -16,6 +16,8 @@ int main()
 		std::wcout << "name: " << data[i].name << std::endl;
 	}
 
+	FreeVisualStudioInstances(data);
+
 
 	std::cin.get();
 

@@ -1,7 +1,18 @@
 #include "pch.h"
 
+
 //// GUID per le interfacce DTE (inutilizzate per ora)
 //static const IID ID_DTE = { 0x04A72314, 0x32E9, 0x48E2, {0x93, 0x43, 0x77, 0x39, 0xFB, 0xAE, 0x8A, 0xA8} };
+
+struct VisualStudioInstance;
+
+extern "C" {
+	__declspec(dllexport) int GetRunningVisualStudioInstances(long* len, VisualStudioInstance** data);
+
+	__declspec(dllexport) void FreeVisualStudioInstances(VisualStudioInstance* data);
+}
+
+
 
 struct VisualStudioInstanceInfo {
 	IDispatch* dispatch;
@@ -33,9 +44,13 @@ struct VisualStudioInstance {
 };
 
 
+static Logger logger("debugAPI_logs.txt");
+
+
 //recupera l'ultimo errore 
 std::wstring GetLastErrorAsString()
 {
+	
 	DWORD errorMessageID = GetLastError();
 	if (errorMessageID == 0) {
 		return std::wstring();
@@ -55,7 +70,7 @@ std::wstring GetLastErrorAsString()
 int GetSolutionInfo(VisualStudioInstanceInfo& instance)
 {
 	if (instance.dispatch == nullptr) {
-		std::wcout << L"Dispatch is null" << std::endl;
+		logger.log(ERRORLEVEL, L"Dispatch is null");
 		return -1;
 	}
 
@@ -64,7 +79,7 @@ int GetSolutionInfo(VisualStudioInstanceInfo& instance)
 		OLECHAR* memberName = (OLECHAR*)L"Solution";
 		HRESULT hr = instance.dispatch->GetIDsOfNames(IID_NULL, &memberName, 1, LOCALE_USER_DEFAULT, &dispidSolution);
 		if (FAILED(hr)) {
-			std::wcout << L"Failed to get Solution DISPID: " << _com_error(hr).ErrorMessage() << std::endl;
+			logger.log(ERRORLEVEL, L"Failed to get Solution DISPID: " + std::wstring(_com_error(hr).ErrorMessage()));
 			return -2;
 		}
 
@@ -76,6 +91,7 @@ int GetSolutionInfo(VisualStudioInstanceInfo& instance)
 			&dispparamsNoArgs, &result, NULL, NULL);
 		if (FAILED(hr) || result.vt != VT_DISPATCH || result.pdispVal == nullptr) {
 			VariantClear(&result);
+			logger.log(ERRORLEVEL, L"Failed to retrieve Solution object.");
 			return -2;  // Non sono riuscito ad ottenere l'oggetto soluzione
 		}
 
@@ -88,6 +104,7 @@ int GetSolutionInfo(VisualStudioInstanceInfo& instance)
 		if (FAILED(hr)) {
 			pSolution->Release();
 			VariantClear(&result);
+			logger.log(ERRORLEVEL, L"Failed to get IsOpen property.");
 			return -2;
 		}
 
@@ -99,6 +116,7 @@ int GetSolutionInfo(VisualStudioInstanceInfo& instance)
 			VariantClear(&varIsOpen);
 			pSolution->Release();
 			VariantClear(&result);
+			logger.log(ERRORLEVEL, L"Failed to retrieve IsOpen property.");
 			return -2;
 		}
 
@@ -113,6 +131,7 @@ int GetSolutionInfo(VisualStudioInstanceInfo& instance)
 			if (FAILED(hr)) {
 				pSolution->Release();
 				VariantClear(&result);
+				logger.log(ERRORLEVEL, L"Failed to get FullName property.");
 				return -2;
 			}
 
@@ -124,6 +143,7 @@ int GetSolutionInfo(VisualStudioInstanceInfo& instance)
 				VariantClear(&varFullName);
 				pSolution->Release();
 				VariantClear(&result);
+				logger.log(ERRORLEVEL, L"Failed to retrieve FullName property.");
 				return -2;
 			}
 
@@ -135,11 +155,11 @@ int GetSolutionInfo(VisualStudioInstanceInfo& instance)
 		VariantClear(&result);
 	}
 	catch (_com_error& e) {
-		std::wcout << L"COM Error: " << e.ErrorMessage() << std::endl;
+		logger.log(ERRORLEVEL, L"COM Error: " + std::wstring(e.ErrorMessage()));
 		return -3;
 	}
 	catch (...) {
-		std::wcout << L"Unknown error occurred" << std::endl;
+		logger.log(ERRORLEVEL, L"Unknown error occurred.");
 		return -4;
 	}
 
@@ -157,13 +177,13 @@ std::vector<VisualStudioInstanceInfo> GetRunningVisualStudioInstancesCore()
 
 	// Recupera il Running Object Table
 	if (GetRunningObjectTable(0, &pROT) != S_OK) {
-		std::wcout << L"Error while retrieving Running Object Table: " << GetLastErrorAsString() << std::endl;
-		return instances; 
+		logger.log(ERRORLEVEL, L"Error while retrieving Running Object Table: " + GetLastErrorAsString());
+		return instances;
 	}
 
 	// Recupera l'enumeratore degli oggetti in esecuzione
 	if (pROT->EnumRunning(&pEnumMoniker) != S_OK) {
-		std::wcout << L"Errore nel recuperare l'enumeratore degli oggetti in esecuzione: " << GetLastErrorAsString() << std::endl;
+		logger.log(ERRORLEVEL, L"Error while retrieving enumerator for running objects: " + GetLastErrorAsString());
 		pROT->Release();
 		return instances;
 	}
@@ -187,7 +207,7 @@ std::vector<VisualStudioInstanceInfo> GetRunningVisualStudioInstancesCore()
 		}
 
 		std::wstring ws(displayName);
-		std::wcout << L"Found ROT entry: " << ws << std::endl;
+		logger.log(INFOLEVEL, L"Found ROT entry: " + ws);
 
 		// Se è una sessione Visual Studio
 		if (ws.find(L"!VisualStudio.DTE") != std::wstring::npos)
@@ -197,6 +217,7 @@ std::vector<VisualStudioInstanceInfo> GetRunningVisualStudioInstancesCore()
 			if (FAILED(hr) || pObj == nullptr) {
 				CoTaskMemFree(displayName);
 				pMoniker->Release();
+				logger.log(ERRORLEVEL, L"Failed to get object from ROT entry: " + ws);
 				continue; // Ritorna al ciclo in caso di errore
 			}
 
@@ -206,11 +227,17 @@ std::vector<VisualStudioInstanceInfo> GetRunningVisualStudioInstancesCore()
 				pObj->Release();
 				CoTaskMemFree(displayName);
 				pMoniker->Release();
+				logger.log(ERRORLEVEL, L"Failed to query IDispatch interface for ROT entry: " + ws);
 				continue; // Ritorna al ciclo in caso di errore
 			}
 
 			VisualStudioInstanceInfo instance(pDispatch, L"", false);
-			GetSolutionInfo(instance);
+			int solutionInfoStatus = GetSolutionInfo(instance);
+
+
+			if (solutionInfoStatus != 0) {
+				logger.log(ERRORLEVEL, L"Failed to get solution info for VS instance from: " + ws);
+			}
 
 			// Rilascia il dispatch prima di aggiungere l'istanza
 			if (instance.dispatch != nullptr) {
@@ -218,7 +245,7 @@ std::vector<VisualStudioInstanceInfo> GetRunningVisualStudioInstancesCore()
 			}
 
 			instances.emplace_back(instance);
-			std::wcout << L"Added VS instance from: " << ws << std::endl;
+			logger.log(INFOLEVEL, L"Added VS instance from: " + ws);
 
 			pObj->Release();
 		}
@@ -237,10 +264,11 @@ std::vector<VisualStudioInstanceInfo> GetRunningVisualStudioInstancesCore()
 // Funzione principale per ottenere le istanze di Visual Studio
 extern "C" __declspec(dllexport) int GetRunningVisualStudioInstances(long* len, VisualStudioInstance** data) {
 
-	HRESULT hr = CoInitializeEx(nullptr, COINIT_MULTITHREADED);
+	HRESULT hr = CoInitialize(nullptr);
 
 	if (FAILED(hr)) {
-		std::wcout << L"Failed to initialize COM: " << _com_error(hr).ErrorMessage() << std::endl;
+		logger.log(ERRORLEVEL, L"Failed to initialize COM: " + std::wstring(_com_error(hr).ErrorMessage()));
+
 		return -1;
 	}
 
@@ -248,20 +276,41 @@ extern "C" __declspec(dllexport) int GetRunningVisualStudioInstances(long* len, 
 
 	*len = static_cast<long>(temp_instances.size());
 
-	if (*len > 0) {
-		// Alloca l'array di istanze nella memoria per riferimento
-		*data = new VisualStudioInstance[*len];
 
-		// Copia le istanze nel nuovo array
-		for (long i = 0; i < *len; i++) {
-			(*data)[i] = VisualStudioInstance(temp_instances[i]); 
+	if (*len > 0) {
+		*data = (VisualStudioInstance*)CoTaskMemAlloc(*len * sizeof(VisualStudioInstance));
+		if (*data == nullptr) {
+			logger.log(ERRORLEVEL, L"Failed to allocate memory for instances.");
+			CoUninitialize();
+			return -1;
 		}
+
+		for (long i = 0; i < *len; i++) {
+			(*data)[i] = VisualStudioInstance(temp_instances[i]);
+		}
+
+		logger.log(INFOLEVEL, L"Retrieved " + std::to_wstring(*len) + L" Visual Studio instance(s).");
+
 	}
 	else {
 		*data = nullptr;
+		logger.log(INFOLEVEL, L"No running Visual Studio instances found.");
+
 	}
 
 	CoUninitialize();
+
+	return 0;
 }
 
 
+extern "C" __declspec(dllexport) void FreeVisualStudioInstances(VisualStudioInstance* data) {
+
+	logger.log(DEBUGLEVEL, "Call to FreeVisualStudioInstances()");
+
+	if (data != nullptr) {
+		CoTaskMemFree(data);
+
+		logger.log(DEBUGLEVEL, "data memory free()");
+	}
+}
