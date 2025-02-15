@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Diagnostics.Contracts;
 using System.Runtime.InteropServices;
 using System.Runtime.InteropServices.ComTypes;
@@ -9,13 +10,14 @@ using System.Xml.Linq;
 using WindowsFormsExplorer.Domain;
 using WindowsFormsExplorer.Services;
 using WindowsFormsExplorer.Utility;
+using Debugger = WindowsFormsExplorer.Services.Debugger;
 
 namespace WindowsFormsExplorer.Views
 {
     public partial class MainForm : Form
     {
         private bool m_CanLoad = false;
-        private readonly List<FormInfo> m_FormInfos = new List<FormInfo>();
+        private readonly List<ControlInfo> m_FormInfos = new List<ControlInfo>();
         private Debugger m_Debugger = null;
 
         public MainForm()
@@ -34,7 +36,7 @@ namespace WindowsFormsExplorer.Views
         {
             try
             {
-
+                m_CanLoad = false;
                 ConnectToProcess();
 
                 if (m_CanLoad)
@@ -53,7 +55,7 @@ namespace WindowsFormsExplorer.Views
 
         }
 
-
+        
         private void ConnectToProcess()
         {
             EnvDTE80.DTE2 dte;
@@ -62,7 +64,7 @@ namespace WindowsFormsExplorer.Views
             {
                 ProcessInspector processInspector = new ProcessInspector();
 
-                var visualStudioInstancesResult = processInspector.GetVisualStudioInstances();
+                Result<List<EnvDTE80.DTE2>> visualStudioInstancesResult = processInspector.GetVisualStudioInstances();
 
                 visualStudioInstancesResult.Match(
                     onSuccess: _ => { },
@@ -149,7 +151,7 @@ namespace WindowsFormsExplorer.Views
                 try
                 {
                     int formCount = 0;
-                    var canQueryDebugger = m_Debugger.CanQuery(ref formCount);
+                    Result<bool> canQueryDebugger = m_Debugger.CanQuery(ref formCount);
 
                     canQueryDebugger.Match(
                     onSuccess: _ => { },
@@ -173,7 +175,7 @@ namespace WindowsFormsExplorer.Views
                     if (canQueryDebugger.IsFailure)
                         return;
 
-                    foreach (FormInfo formInfo in m_Debugger.GetFormInfo(formCount))
+                    foreach (ControlInfo formInfo in m_Debugger.GetFormInfo(formCount))
                     {
                         m_FormInfos.Add(formInfo);
                         formsDataGridView.Rows.Add(formInfo.Name, formInfo.Type, formInfo.Text, formInfo.Visible, formInfo.Handle);
@@ -195,7 +197,7 @@ namespace WindowsFormsExplorer.Views
 
         private void formsDataGridView_SelectionChanged(object sender, EventArgs e)
         {
-            if (formsDataGridView.Rows.Count <= 0)
+            if (formsDataGridView.SelectedRows.Count <= 0)
             {
                 return;
             }
@@ -241,9 +243,12 @@ namespace WindowsFormsExplorer.Views
 
         private void ExploreControlsRecursively(string controlExpr, TreeNode parentNode)
         {
+            Stopwatch stopwatch = new Stopwatch();  // Stopwatch per misurare i tempi
 
             try
             {
+                stopwatch.Start();  // Inizia il cronometro
+
                 // Ottengo la collezione Controls
                 string controlsStr = m_Debugger.GetExpressionValue($"{controlExpr}.Controls");
 
@@ -252,6 +257,9 @@ namespace WindowsFormsExplorer.Views
                     return;
                 }
 
+                // Stampa per sapere che stiamo eseguendo l'operazione
+                Console.WriteLine($"Exploring Controls for: {controlExpr}");
+
                 // Ottengo il Count dei controlli
                 string controlCountStr = m_Debugger.GetExpressionValue($"{controlExpr}.Controls.Count");
 
@@ -259,6 +267,9 @@ namespace WindowsFormsExplorer.Views
                 {
                     return;
                 }
+
+                Stopwatch controlLoopStopwatch = new Stopwatch();  // Cronometro per il ciclo dei controlli
+                controlLoopStopwatch.Start();
 
                 for (int i = 0; i < controlCount; i++)
                 {
@@ -269,6 +280,9 @@ namespace WindowsFormsExplorer.Views
                     string type = m_Debugger.GetExpressionValue($"{childExpr}.GetType().Name") ?? "Unknown";
                     string text = m_Debugger.GetExpressionValue($"{childExpr}.Text") ?? "";
                     bool visible = m_Debugger.GetExpressionValue($"{childExpr}.Visible") == "true";
+
+                    // Stampa il nome del controllo
+                    Console.WriteLine($"Processing Control: {name}");
 
                     // Creo il nodo per questo controllo
                     string nodeText = $"{name} ({type})";
@@ -287,81 +301,24 @@ namespace WindowsFormsExplorer.Views
                         Tag = childExpr
                     };
 
-                    // Aggungo proprietà aggiuntive (abbastanza oneroso da vedere magari con un sistema di Lazy Loading
-                    //AddControlProperties(childExpr, node);
-
                     // Ricorsione sui controlli figli
                     ExploreControlsRecursively(childExpr, node);
 
                     parentNode.Nodes.Add(node);
                 }
+
+                controlLoopStopwatch.Stop();  // Ferma il cronometro per il ciclo dei controlli
+                Console.WriteLine($"Time taken to explore controls for {controlExpr}: {controlLoopStopwatch.ElapsedMilliseconds} ms" + Environment.NewLine);
             }
             catch (Exception ex)
             {
                 TreeNode errorNode = new TreeNode($"Error: {ex.Message}");
                 parentNode.Nodes.Add(errorNode);
             }
-        }
-
-
-        private void AddControlProperties(string controlExpr, TreeNode node)
-        {
-            try
+            finally
             {
-                // Lista delle proprietà comuni da ispezionare
-                string[] properties = new[]
-                {
-                    "Location", "Size", "Dock", "Anchor", "TabIndex", "Enabled",
-                    "BackColor", "ForeColor", "Font", "Padding", "Margin"
-                };
-
-                foreach (string prop in properties)
-                {
-                    string value = m_Debugger.GetExpressionValue($"{controlExpr}.{prop}");
-
-                    if (!string.IsNullOrEmpty(value))
-                    {
-                        TreeNode propNode = new TreeNode($"{prop}: {value}");
-                        node.Nodes.Add(propNode);
-                    }
-                }
-
-                // Proprietà specifiche per diversi tipi di controlli
-                string type = m_Debugger.GetExpressionValue($"{controlExpr}.GetType().Name");
-                switch (type)
-                {
-                    case "TextBox":
-                        AddProperty(node, controlExpr, "MultiLine");
-                        AddProperty(node, controlExpr, "MaxLength");
-                        AddProperty(node, controlExpr, "ReadOnly");
-                        break;
-                    case "Button":
-                        AddProperty(node, controlExpr, "DialogResult");
-                        AddProperty(node, controlExpr, "FlatStyle");
-                        break;
-                    case "ComboBox":
-                        AddProperty(node, controlExpr, "DropDownStyle");
-                        AddProperty(node, controlExpr, "Items.Count");
-                        AddProperty(node, controlExpr, "SelectedIndex");
-                        break;
-                        // altri casi specifici per tipo...
-                }
-            }
-            catch (Exception ex)
-            {
-                TreeNode errorNode = new TreeNode($"Error getting properties: {ex.Message}");
-                node.Nodes.Add(errorNode);
-            }
-        }
-
-
-        private void AddProperty(TreeNode node, string controlExpr, string propertyName)
-        {
-            string value = m_Debugger.GetExpressionValue($"{controlExpr}.{propertyName}");
-            if (!string.IsNullOrEmpty(value))
-            {
-                TreeNode propNode = new TreeNode($"{propertyName}: {value}");
-                node.Nodes.Add(propNode);
+                stopwatch.Stop();  // Ferma il cronometro per l'intero processo
+                Console.WriteLine($"Total time taken for {controlExpr}: {stopwatch.ElapsedMilliseconds} ms");
             }
         }
 

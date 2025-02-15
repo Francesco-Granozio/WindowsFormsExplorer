@@ -36,11 +36,11 @@ namespace WindowsFormsExplorer.Views
             System.Windows.Forms.DataGridViewCellStyle dataGridViewCellStyle3 = new System.Windows.Forms.DataGridViewCellStyle();
             System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(VSInstanceSelectorForm));
             this.instancesDataGridView = new System.Windows.Forms.DataGridView();
-            this.panel1 = new System.Windows.Forms.Panel();
-            this.selectBtn = new System.Windows.Forms.Button();
             this.colInstanceNumber = new System.Windows.Forms.DataGridViewTextBoxColumn();
             this.colIstanceName = new System.Windows.Forms.DataGridViewTextBoxColumn();
             this.colOpeneSolution = new System.Windows.Forms.DataGridViewCheckBoxColumn();
+            this.panel1 = new System.Windows.Forms.Panel();
+            this.selectBtn = new System.Windows.Forms.Button();
             ((System.ComponentModel.ISupportInitialize)(this.instancesDataGridView)).BeginInit();
             this.panel1.SuspendLayout();
             this.SuspendLayout();
@@ -71,33 +71,8 @@ namespace WindowsFormsExplorer.Views
             this.instancesDataGridView.ReadOnly = true;
             this.instancesDataGridView.RowHeadersVisible = false;
             this.instancesDataGridView.SelectionMode = System.Windows.Forms.DataGridViewSelectionMode.FullRowSelect;
-            this.instancesDataGridView.Size = new System.Drawing.Size(658, 381);
+            this.instancesDataGridView.Size = new System.Drawing.Size(654, 381);
             this.instancesDataGridView.TabIndex = 0;
-            // 
-            // panel1
-            // 
-            this.panel1.BackColor = System.Drawing.SystemColors.ActiveCaption;
-            this.panel1.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle;
-            this.panel1.Controls.Add(this.selectBtn);
-            this.panel1.Dock = System.Windows.Forms.DockStyle.Bottom;
-            this.panel1.Location = new System.Drawing.Point(0, 341);
-            this.panel1.Name = "panel1";
-            this.panel1.Size = new System.Drawing.Size(658, 40);
-            this.panel1.TabIndex = 1;
-            // 
-            // selectBtn
-            // 
-            this.selectBtn.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
-            this.selectBtn.Image = global::WindowsFormsExplorer.Properties.Resources.select;
-            this.selectBtn.ImageAlign = System.Drawing.ContentAlignment.MiddleLeft;
-            this.selectBtn.Location = new System.Drawing.Point(579, 9);
-            this.selectBtn.Name = "selectBtn";
-            this.selectBtn.Size = new System.Drawing.Size(64, 24);
-            this.selectBtn.TabIndex = 0;
-            this.selectBtn.Text = "Select";
-            this.selectBtn.TextAlign = System.Drawing.ContentAlignment.MiddleRight;
-            this.selectBtn.UseVisualStyleBackColor = true;
-            this.selectBtn.Click += new System.EventHandler(this.selectBtn_Click);
             // 
             // colInstanceNumber
             // 
@@ -130,11 +105,36 @@ namespace WindowsFormsExplorer.Views
             this.colOpeneSolution.Name = "colOpeneSolution";
             this.colOpeneSolution.ReadOnly = true;
             // 
+            // panel1
+            // 
+            this.panel1.BackColor = System.Drawing.SystemColors.ActiveCaption;
+            this.panel1.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle;
+            this.panel1.Controls.Add(this.selectBtn);
+            this.panel1.Dock = System.Windows.Forms.DockStyle.Bottom;
+            this.panel1.Location = new System.Drawing.Point(0, 341);
+            this.panel1.Name = "panel1";
+            this.panel1.Size = new System.Drawing.Size(654, 40);
+            this.panel1.TabIndex = 1;
+            // 
+            // selectBtn
+            // 
+            this.selectBtn.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
+            this.selectBtn.Image = global::WindowsFormsExplorer.Properties.Resources.select;
+            this.selectBtn.ImageAlign = System.Drawing.ContentAlignment.MiddleLeft;
+            this.selectBtn.Location = new System.Drawing.Point(575, 9);
+            this.selectBtn.Name = "selectBtn";
+            this.selectBtn.Size = new System.Drawing.Size(64, 24);
+            this.selectBtn.TabIndex = 0;
+            this.selectBtn.Text = "Select";
+            this.selectBtn.TextAlign = System.Drawing.ContentAlignment.MiddleRight;
+            this.selectBtn.UseVisualStyleBackColor = true;
+            this.selectBtn.Click += new System.EventHandler(this.selectBtn_Click);
+            // 
             // VSInstanceSelectorForm
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.ClientSize = new System.Drawing.Size(658, 381);
+            this.ClientSize = new System.Drawing.Size(654, 381);
             this.Controls.Add(this.panel1);
             this.Controls.Add(this.instancesDataGridView);
             this.FormBorderStyle = System.Windows.Forms.FormBorderStyle.FixedSingle;

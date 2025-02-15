@@ -69,7 +69,7 @@ namespace WindowsFormsExplorer.Services
         }
 
 
-        public IEnumerable<FormInfo> GetFormInfo(int formCount)
+        public IEnumerable<ControlInfo> GetFormInfo(int formCount)
         {
             for (int i = 0; i < formCount; i++)
             {
@@ -87,7 +87,7 @@ namespace WindowsFormsExplorer.Services
                 string handle = GetExpressionValue($"{baseExpr}.Handle.ToInt32()") ?? "N/A";
                 string name = GetExpressionValue($"{baseExpr}.Name") ?? $"Form_{i}";
 
-                yield return new FormInfo(name, type, text, visible, handle);
+                yield return new ControlInfo(baseExpr, name, type, text, visible, handle);
             }
         }
 
