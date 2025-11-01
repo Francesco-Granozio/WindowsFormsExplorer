@@ -20,16 +20,24 @@ namespace WindowsFormsExplorer.UI.Forms
         private IDebuggerService _debuggerService = null;
         private readonly IVisualStudioDiscovery _discoveryService;
         private BindingList<FormInfoRow> _formData;
+        private BindingList<PropertyRow> _propertyData;
 
         public MainForm()
         {
             InitializeComponent();
             _discoveryService = new VisualStudioDiscoveryService();
             _formData = new BindingList<FormInfoRow>();
+            _propertyData = new BindingList<PropertyRow>();
             
-            // Configura il DataGrid e TreeView
+            // Configura il DataGrid, TreeView e PropertyGrid
             ConfigureDataGrid();
             ConfigureTreeView();
+            ConfigurePropertyGrid();
+        }
+
+        private void ConfigurePropertyGrid()
+        {
+            sfDataGridProperties.DataSource = _propertyData;
         }
 
         private void ConfigureTreeView()
@@ -269,6 +277,8 @@ namespace WindowsFormsExplorer.UI.Forms
         {
             Cursor.Current = Cursors.WaitCursor;
             treeViewAdv1.Nodes.Clear();
+            _propertyData.Clear();
+            propertyGridLabel.Text = "Properties";
             SetControlsEnabled(false);
 
             try
@@ -474,6 +484,210 @@ namespace WindowsFormsExplorer.UI.Forms
             sfDataGrid1.Enabled = enabled;
         }
 
+        private async void treeViewAdv1_AfterSelect(object sender, EventArgs e)
+        {
+            if (treeViewAdv1.SelectedNode == null)
+                return;
+
+            string expression = treeViewAdv1.SelectedNode.Tag as string;
+            if (string.IsNullOrEmpty(expression))
+                return;
+
+            await LoadControlPropertiesAsync(expression);
+        }
+
+        private async Task LoadControlPropertiesAsync(string controlExpression)
+        {
+            _propertyData.Clear();
+            
+            if (_debuggerService == null)
+                return;
+
+            try
+            {
+                Cursor.Current = Cursors.WaitCursor;
+                propertyGridLabel.Text = "Properties (Loading...)";
+
+                // DISCOVERY DINAMICO: Ottiene tutte le proprietà usando reflection
+                var stopwatch = Stopwatch.StartNew();
+                
+                // Ottiene il tipo del controllo
+                Result<string> typeNameResult = _debuggerService.EvaluateExpression($"{controlExpression}.GetType().FullName");
+                
+                if (typeNameResult.IsFailure || string.IsNullOrEmpty(typeNameResult.Value))
+                {
+                    Debug.WriteLine("Unable to get control type");
+                    propertyGridLabel.Text = "Properties";
+                    return;
+                }
+
+                string typeName = typeNameResult.Value.Trim('"');
+                Debug.WriteLine($"Control type: {typeName}");
+
+                // Ottiene tutte le proprietà pubbliche
+                List<string> propertyNames = await DiscoverPropertiesAsync(controlExpression);
+                Debug.WriteLine($"Discovered {propertyNames.Count} properties");
+
+                // Costruisce le espressioni da valutare
+                var propertyExpressions = propertyNames
+                    .Select(prop => $"{controlExpression}.{prop}")
+                    .ToList();
+
+                // Valuta tutte le proprietà in batch
+                Result<Dictionary<string, string>> propertyResult = 
+                    await _debuggerService.EvaluateExpressionsAsync(propertyExpressions);
+
+                stopwatch.Stop();
+                Debug.WriteLine($"Loaded properties in {stopwatch.ElapsedMilliseconds}ms");
+
+                if (propertyResult.IsSuccess)
+                {
+                    foreach (var prop in propertyNames)
+                    {
+                        string fullExpression = $"{controlExpression}.{prop}";
+                        if (propertyResult.Value.TryGetValue(fullExpression, out string value))
+                        {
+                            // Salta valori nulli, vuoti o errori di compilazione
+                            if (!string.IsNullOrEmpty(value) && 
+                                value != "null" && 
+                                !value.Contains("error CS") &&
+                                !value.Contains("Exception"))
+                            {
+                                _propertyData.Add(new PropertyRow
+                                {
+                                    PropertyName = prop,
+                                    PropertyValue = value
+                                });
+                            }
+                            else if (value.Contains("error CS"))
+                            {
+                                Debug.WriteLine($"Skipping {prop}: evaluation error - {value}");
+                            }
+                        }
+                    }
+                }
+
+                // Aggiorna il titolo con il nome del controllo
+                Result<string> nameResult = _debuggerService.EvaluateExpression($"{controlExpression}.Name");
+                if (nameResult.IsSuccess && !string.IsNullOrEmpty(nameResult.Value))
+                {
+                    propertyGridLabel.Text = $"Properties - {nameResult.Value.Trim('"')}";
+                }
+                else
+                {
+                    propertyGridLabel.Text = "Properties";
+                }
+            }
+            catch (Exception ex)
+            {
+                Debug.WriteLine($"Error loading properties: {ex.Message}");
+                propertyGridLabel.Text = "Properties (Error)";
+            }
+            finally
+            {
+                Cursor.Current = Cursors.Default;
+            }
+        }
+
+        private async Task<List<string>> DiscoverPropertiesAsync(string controlExpression)
+        {
+            var properties = new List<string>();
+
+            try
+            {
+                // Usa reflection per ottenere tutte le proprietà pubbliche
+                string getPropertiesExpr = $"{controlExpression}.GetType().GetProperties(System.Reflection.BindingFlags.Public | System.Reflection.BindingFlags.Instance).Length";
+                Result<string> countResult = _debuggerService.EvaluateExpression(getPropertiesExpr);
+
+                if (countResult.IsSuccess && int.TryParse(countResult.Value, out int propCount))
+                {
+                    Debug.WriteLine($"Total properties: {propCount}");
+
+                    // Limita a un numero ragionevole per performance (max 100 proprietà)
+                    int maxProps = Math.Min(propCount, 100);
+
+                    for (int i = 0; i < maxProps; i++)
+                    {
+                        // Ottiene informazioni sulla proprietà
+                        string propInfoExpr = $"{controlExpression}.GetType().GetProperties(System.Reflection.BindingFlags.Public | System.Reflection.BindingFlags.Instance)[{i}]";
+                        
+                        // Nome proprietà
+                        string propNameExpr = $"{propInfoExpr}.Name";
+                        Result<string> propNameResult = _debuggerService.EvaluateExpression(propNameExpr);
+
+                        if (propNameResult.IsSuccess && !string.IsNullOrEmpty(propNameResult.Value))
+                        {
+                            string propName = propNameResult.Value.Trim('"');
+                            
+                            // Verifica se la proprietà può essere letta (ha un getter pubblico)
+                            string canReadExpr = $"{propInfoExpr}.CanRead";
+                            Result<string> canReadResult = _debuggerService.EvaluateExpression(canReadExpr);
+                            
+                            if (canReadResult.IsFailure || canReadResult.Value != "true")
+                            {
+                                Debug.WriteLine($"Skipping {propName}: cannot read");
+                                continue;
+                            }
+
+                            // Verifica se la proprietà ha parametri (è un indexer)
+                            string hasParamsExpr = $"{propInfoExpr}.GetIndexParameters().Length";
+                            Result<string> hasParamsResult = _debuggerService.EvaluateExpression(hasParamsExpr);
+                            
+                            if (hasParamsResult.IsSuccess && hasParamsResult.Value != "0")
+                            {
+                                Debug.WriteLine($"Skipping {propName}: is an indexer");
+                                continue;
+                            }
+                            
+                            // Filtra proprietà che potrebbero causare problemi
+                            if (!ShouldSkipProperty(propName))
+                            {
+                                properties.Add(propName);
+                            }
+                            else
+                            {
+                                Debug.WriteLine($"Skipping {propName}: in skip list");
+                            }
+                        }
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                Debug.WriteLine($"Error discovering properties: {ex.Message}");
+            }
+
+            return properties;
+        }
+
+        private bool ShouldSkipProperty(string propertyName)
+        {
+            // Salta proprietà che potrebbero causare problemi o che non sono informative
+            var skipList = new HashSet<string>(StringComparer.OrdinalIgnoreCase)
+            {
+                // Proprietà che causano problemi con EnvDTE
+                "Handle", "Parent", "Container", "Site", "BindingContext",
+                "AccessibilityObject", "CreateParams", "DefaultImeMode",
+                "DefaultMargin", "DefaultMaximumSize", "DefaultMinimumSize",
+                "DefaultPadding", "DefaultSize", "FontHeight", "RenderRightToLeft",
+                
+                // Proprietà di layout interne
+                "LayoutEngine", "ProductVersion", "CompanyName",
+                "ProductName", "PreferredSize", "Controls",
+                
+                // Proprietà Windows Forms interne
+                "WindowTarget", "Region", "AccessibleDefaultActionDescription",
+                "CausesValidation", "DataBindings", "Tag",
+                
+                // Proprietà che richiedono contesto specifico
+                "TopLevelControl", "ParentForm", "ActiveControl",
+                "ContainsFocus", "Focused", "CanFocus", "CanSelect"
+            };
+
+            return skipList.Contains(propertyName);
+        }
+
+
         protected override void OnFormClosing(FormClosingEventArgs e)
         {
             try
@@ -494,5 +708,12 @@ namespace WindowsFormsExplorer.UI.Forms
         public string Visible { get; set; }
         public string Handle { get; set; }
         public string Expression { get; set; }
+    }
+
+    // Classe helper per il PropertyGrid
+    public class PropertyRow
+    {
+        public string PropertyName { get; set; }
+        public string PropertyValue { get; set; }
     }
 }

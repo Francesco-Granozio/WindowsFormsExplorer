@@ -34,7 +34,11 @@ namespace WindowsFormsExplorer.UI.Forms
             System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(MainForm));
             this.splitContainer = new System.Windows.Forms.SplitContainer();
             this.sfDataGrid1 = new Syncfusion.WinForms.DataGrid.SfDataGrid();
+            this.splitContainerRight = new System.Windows.Forms.SplitContainer();
             this.treeViewAdv1 = new Syncfusion.Windows.Forms.Tools.TreeViewAdv();
+            this.propertyPanel = new Syncfusion.Windows.Forms.Tools.GradientPanel();
+            this.propertyGridLabel = new System.Windows.Forms.Label();
+            this.sfDataGridProperties = new Syncfusion.WinForms.DataGrid.SfDataGrid();
             this.gradientPanel1 = new Syncfusion.Windows.Forms.Tools.GradientPanel();
             this.btnConnect = new Syncfusion.Windows.Forms.ButtonAdv();
             this.btnRefresh = new Syncfusion.Windows.Forms.ButtonAdv();
@@ -42,8 +46,15 @@ namespace WindowsFormsExplorer.UI.Forms
             this.splitContainer.Panel1.SuspendLayout();
             this.splitContainer.Panel2.SuspendLayout();
             this.splitContainer.SuspendLayout();
+            ((System.ComponentModel.ISupportInitialize)(this.splitContainerRight)).BeginInit();
+            this.splitContainerRight.Panel1.SuspendLayout();
+            this.splitContainerRight.Panel2.SuspendLayout();
+            this.splitContainerRight.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.sfDataGrid1)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.treeViewAdv1)).BeginInit();
+            ((System.ComponentModel.ISupportInitialize)(this.propertyPanel)).BeginInit();
+            this.propertyPanel.SuspendLayout();
+            ((System.ComponentModel.ISupportInitialize)(this.sfDataGridProperties)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.gradientPanel1)).BeginInit();
             this.gradientPanel1.SuspendLayout();
             this.SuspendLayout();
@@ -60,10 +71,27 @@ namespace WindowsFormsExplorer.UI.Forms
             // 
             // splitContainer.Panel2
             // 
-            this.splitContainer.Panel2.Controls.Add(this.treeViewAdv1);
+            this.splitContainer.Panel2.Controls.Add(this.splitContainerRight);
             this.splitContainer.Size = new System.Drawing.Size(1184, 701);
-            this.splitContainer.SplitterDistance = 500;
+            this.splitContainer.SplitterDistance = 400;
             this.splitContainer.TabIndex = 0;
+            // 
+            // splitContainerRight
+            // 
+            this.splitContainerRight.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.splitContainerRight.Location = new System.Drawing.Point(0, 0);
+            this.splitContainerRight.Name = "splitContainerRight";
+            // 
+            // splitContainerRight.Panel1
+            // 
+            this.splitContainerRight.Panel1.Controls.Add(this.treeViewAdv1);
+            // 
+            // splitContainerRight.Panel2
+            // 
+            this.splitContainerRight.Panel2.Controls.Add(this.propertyPanel);
+            this.splitContainerRight.Size = new System.Drawing.Size(780, 701);
+            this.splitContainerRight.SplitterDistance = 480;
+            this.splitContainerRight.TabIndex = 0;
             // 
             // sfDataGrid1
             // 
@@ -83,7 +111,7 @@ namespace WindowsFormsExplorer.UI.Forms
             // treeViewAdv1
             // 
             this.treeViewAdv1.BackColor = System.Drawing.Color.White;
-            this.treeViewAdv1.BeforeTouchSize = new System.Drawing.Size(680, 701);
+            this.treeViewAdv1.BeforeTouchSize = new System.Drawing.Size(480, 701);
             this.treeViewAdv1.Border3DStyle = System.Windows.Forms.Border3DStyle.Flat;
             this.treeViewAdv1.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle;
             this.treeViewAdv1.Dock = System.Windows.Forms.DockStyle.Fill;
@@ -100,10 +128,11 @@ namespace WindowsFormsExplorer.UI.Forms
             this.treeViewAdv1.Name = "treeViewAdv1";
             this.treeViewAdv1.SelectedNodeForeColor = System.Drawing.SystemColors.HighlightText;
             this.treeViewAdv1.ShowLines = true;
-            this.treeViewAdv1.Size = new System.Drawing.Size(680, 701);
+            this.treeViewAdv1.Size = new System.Drawing.Size(480, 701);
             this.treeViewAdv1.Style = Syncfusion.Windows.Forms.Tools.TreeStyle.Office2016Colorful;
             this.treeViewAdv1.TabIndex = 0;
             this.treeViewAdv1.Text = "treeViewAdv1";
+            this.treeViewAdv1.AfterSelect += new System.EventHandler(this.treeViewAdv1_AfterSelect);
             // 
             // ToolTip for treeViewAdv1
             // 
@@ -114,6 +143,66 @@ namespace WindowsFormsExplorer.UI.Forms
             this.treeViewAdv1.ToolTipControl.Size = new System.Drawing.Size(41, 15);
             this.treeViewAdv1.ToolTipControl.TabIndex = 1;
             this.treeViewAdv1.ToolTipControl.Text = "toolTip";
+            // 
+            // propertyPanel
+            // 
+            this.propertyPanel.BackColor = System.Drawing.Color.White;
+            this.propertyPanel.BorderColor = System.Drawing.Color.Silver;
+            this.propertyPanel.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle;
+            this.propertyPanel.Controls.Add(this.sfDataGridProperties);
+            this.propertyPanel.Controls.Add(this.propertyGridLabel);
+            this.propertyPanel.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.propertyPanel.Location = new System.Drawing.Point(0, 0);
+            this.propertyPanel.Name = "propertyPanel";
+            this.propertyPanel.Size = new System.Drawing.Size(296, 701);
+            this.propertyPanel.TabIndex = 0;
+            // 
+            // propertyGridLabel
+            // 
+            this.propertyGridLabel.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(240)))), ((int)(((byte)(240)))), ((int)(((byte)(240)))));
+            this.propertyGridLabel.Dock = System.Windows.Forms.DockStyle.Top;
+            this.propertyGridLabel.Font = new System.Drawing.Font("Segoe UI", 9.75F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.propertyGridLabel.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(68)))), ((int)(((byte)(114)))), ((int)(((byte)(196)))));
+            this.propertyGridLabel.Location = new System.Drawing.Point(0, 0);
+            this.propertyGridLabel.Name = "propertyGridLabel";
+            this.propertyGridLabel.Padding = new System.Windows.Forms.Padding(10, 0, 0, 0);
+            this.propertyGridLabel.Size = new System.Drawing.Size(294, 35);
+            this.propertyGridLabel.TabIndex = 0;
+            this.propertyGridLabel.Text = "Properties";
+            this.propertyGridLabel.TextAlign = System.Drawing.ContentAlignment.MiddleLeft;
+            // 
+            // sfDataGridProperties
+            // 
+            this.sfDataGridProperties.AccessibleName = "Table";
+            this.sfDataGridProperties.AllowEditing = false;
+            this.sfDataGridProperties.AllowResizingColumns = true;
+            this.sfDataGridProperties.AutoGenerateColumns = false;
+            this.sfDataGridProperties.AutoSizeColumnsMode = Syncfusion.WinForms.DataGrid.Enums.AutoSizeColumnsMode.Fill;
+            this.sfDataGridProperties.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.sfDataGridProperties.Location = new System.Drawing.Point(0, 35);
+            this.sfDataGridProperties.Name = "sfDataGridProperties";
+            this.sfDataGridProperties.RowHeight = 21;
+            this.sfDataGridProperties.SelectionMode = Syncfusion.WinForms.DataGrid.Enums.GridSelectionMode.Single;
+            this.sfDataGridProperties.Size = new System.Drawing.Size(294, 664);
+            this.sfDataGridProperties.Style.HeaderStyle.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(68)))), ((int)(((byte)(114)))), ((int)(((byte)(196)))));
+            this.sfDataGridProperties.Style.HeaderStyle.Font.Bold = true;
+            this.sfDataGridProperties.Style.HeaderStyle.TextColor = System.Drawing.Color.White;
+            this.sfDataGridProperties.TabIndex = 1;
+            // 
+            // Columns configuration for Properties Grid
+            // 
+            this.sfDataGridProperties.Columns.Add(new Syncfusion.WinForms.DataGrid.GridTextColumn()
+            {
+                MappingName = "PropertyName",
+                HeaderText = "Property",
+                Width = 120
+            });
+            this.sfDataGridProperties.Columns.Add(new Syncfusion.WinForms.DataGrid.GridTextColumn()
+            {
+                MappingName = "PropertyValue",
+                HeaderText = "Value",
+                Width = 170
+            });
             // 
             // gradientPanel1
             // 
@@ -180,8 +269,15 @@ namespace WindowsFormsExplorer.UI.Forms
             this.splitContainer.Panel2.ResumeLayout(false);
             ((System.ComponentModel.ISupportInitialize)(this.splitContainer)).EndInit();
             this.splitContainer.ResumeLayout(false);
+            this.splitContainerRight.Panel1.ResumeLayout(false);
+            this.splitContainerRight.Panel2.ResumeLayout(false);
+            ((System.ComponentModel.ISupportInitialize)(this.splitContainerRight)).EndInit();
+            this.splitContainerRight.ResumeLayout(false);
             ((System.ComponentModel.ISupportInitialize)(this.sfDataGrid1)).EndInit();
             ((System.ComponentModel.ISupportInitialize)(this.treeViewAdv1)).EndInit();
+            ((System.ComponentModel.ISupportInitialize)(this.propertyPanel)).EndInit();
+            this.propertyPanel.ResumeLayout(false);
+            ((System.ComponentModel.ISupportInitialize)(this.sfDataGridProperties)).EndInit();
             ((System.ComponentModel.ISupportInitialize)(this.gradientPanel1)).EndInit();
             this.gradientPanel1.ResumeLayout(false);
             this.ResumeLayout(false);
@@ -195,5 +291,9 @@ namespace WindowsFormsExplorer.UI.Forms
         private Syncfusion.WinForms.DataGrid.SfDataGrid sfDataGrid1;
         private Syncfusion.Windows.Forms.Tools.TreeViewAdv treeViewAdv1;
         private SplitContainer splitContainer;
+        private SplitContainer splitContainerRight;
+        private Syncfusion.Windows.Forms.Tools.GradientPanel propertyPanel;
+        private System.Windows.Forms.Label propertyGridLabel;
+        private Syncfusion.WinForms.DataGrid.SfDataGrid sfDataGridProperties;
     }
 }
