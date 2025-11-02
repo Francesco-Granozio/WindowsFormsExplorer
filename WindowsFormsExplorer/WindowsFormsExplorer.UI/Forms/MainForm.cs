@@ -349,18 +349,40 @@ namespace WindowsFormsExplorer.UI.Forms
 
         private string FormatNodeText(ControlInfo control)
         {
+            // Rimuovi apici doppi da Name se presenti (EnvDTE può restituirli)
+            string displayName = control.Name?.Trim('"') ?? "";
+            if (displayName.StartsWith("\"") && displayName.EndsWith("\""))
+                displayName = displayName.Substring(1, displayName.Length - 2);
+
             // Crea un testo ben formattato con tutte le informazioni
-            string text = $"{control.Name}";
+            string text = displayName;
 
-            // Aggiungi tipo con padding
-            text += $" [{control.Type}]";
+            // Rimuovi apici doppi da Type se presenti
+            string displayType = control.Type?.Trim('"') ?? "";
+            if (displayType.StartsWith("\"") && displayType.EndsWith("\""))
+                displayType = displayType.Substring(1, displayType.Length - 2);
 
-            // Aggiungi testo se presente
-            if (!string.IsNullOrEmpty(control.Text))
+            // Aggiungi tipo con padding (senza apici)
+            text += $" [{displayType}]";
+
+            // Aggiungi testo se presente e valido (non è un errore di valutazione)
+            if (!string.IsNullOrEmpty(control.Text) &&
+                !control.Text.Contains("Non è possibile valutare") &&
+                !control.Text.Contains("Cannot evaluate") &&
+                !control.Text.Contains("error CS") &&
+                !control.Text.Contains("Exception"))
             {
-                string displayText = control.Text;
+                // Rimuovi apici doppi iniziali e finali se presenti (EnvDTE restituisce stringhe tra apici)
+                string displayText = control.Text.Trim('"');
+                
+                // Rimuovi eventuali apici rimasti
+                if (displayText.StartsWith("\"") && displayText.EndsWith("\""))
+                    displayText = displayText.Substring(1, displayText.Length - 2);
+                
                 if (displayText.Length > 40)
                     displayText = displayText.Substring(0, 37) + "...";
+                
+                // Mostra il testo CON apici doppi
                 text += $" - \"{displayText}\"";
             }
 
@@ -547,11 +569,13 @@ namespace WindowsFormsExplorer.UI.Forms
                         string fullExpression = $"{controlExpression}.{prop}";
                         if (propertyResult.Value.TryGetValue(fullExpression, out string value))
                         {
-                            // Salta valori nulli, vuoti o errori di compilazione
+                            // Salta valori nulli, vuoti o errori di compilazione/valutazione
                             if (!string.IsNullOrEmpty(value) &&
                                 value != "null" &&
                                 !value.Contains("error CS") &&
-                                !value.Contains("Exception"))
+                                !value.Contains("Exception") &&
+                                !value.Contains("Non è possibile valutare") &&
+                                !value.Contains("Cannot evaluate"))
                             {
                                 _propertyData.Add(new PropertyRow
                                 {
@@ -559,9 +583,15 @@ namespace WindowsFormsExplorer.UI.Forms
                                     PropertyValue = value
                                 });
                             }
-                            else if (value.Contains("error CS"))
+                            else
                             {
-                                Debug.WriteLine($"Skipping {prop}: evaluation error - {value}");
+                                // Log degli errori per debug
+                                if (value.Contains("error CS") || 
+                                    value.Contains("Non è possibile valutare") ||
+                                    value.Contains("Cannot evaluate"))
+                                {
+                                    Debug.WriteLine($"Skipping {prop}: evaluation error - {value}");
+                                }
                             }
                         }
                     }
