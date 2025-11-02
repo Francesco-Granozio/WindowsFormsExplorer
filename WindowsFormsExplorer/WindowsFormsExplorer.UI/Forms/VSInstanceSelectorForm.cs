@@ -9,7 +9,7 @@ namespace WindowsFormsExplorer.UI.Forms
     public partial class VSInstanceSelectorForm : Form
     {
         private readonly List<VisualStudioInstance> _instances;
-        private BindingList<InstanceRow> _instanceData;
+        private readonly BindingList<InstanceRow> _instanceData;
         public VisualStudioInstance SelectedInstance { get; private set; }
 
         public VSInstanceSelectorForm(List<VisualStudioInstance> instances)
@@ -28,7 +28,7 @@ namespace WindowsFormsExplorer.UI.Forms
         private void LoadGrid()
         {
             int index = 1;
-            foreach (var instance in _instances)
+            foreach (VisualStudioInstance instance in _instances)
             {
                 if (instance == null)
                     continue;
@@ -36,7 +36,7 @@ namespace WindowsFormsExplorer.UI.Forms
                 _instanceData.Add(new InstanceRow
                 {
                     InstanceNumber = index,
-                    SolutionName = instance.HasOpenSolution ? 
+                    SolutionName = instance.HasOpenSolution ?
                         instance.SolutionName : "No solution open",
                     HasOpenSolution = instance.HasOpenSolution,
                     Instance = instance
@@ -60,17 +60,17 @@ namespace WindowsFormsExplorer.UI.Forms
         {
             if (sfDataGrid1.SelectedIndex < 0 || sfDataGrid1.SelectedIndex >= _instanceData.Count)
             {
-                MessageBox.Show("No row selected. Please select an instance.", 
+                MessageBox.Show("No row selected. Please select an instance.",
                     "Warning", MessageBoxButtons.OK, MessageBoxIcon.Warning);
                 return;
             }
 
-            var selectedRow = _instanceData[sfDataGrid1.SelectedIndex];
+            InstanceRow selectedRow = _instanceData[sfDataGrid1.SelectedIndex];
             SelectedInstance = selectedRow.Instance;
 
             if (SelectedInstance == null)
             {
-                MessageBox.Show("Invalid selection. Please try again.", 
+                MessageBox.Show("Invalid selection. Please try again.",
                     "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
                 return;
             }

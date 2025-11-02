@@ -19,8 +19,8 @@ namespace WindowsFormsExplorer.UI.Forms
         private bool _canLoad = false;
         private IDebuggerService _debuggerService = null;
         private readonly IVisualStudioDiscovery _discoveryService;
-        private BindingList<FormInfoRow> _formData;
-        private BindingList<PropertyRow> _propertyData;
+        private readonly BindingList<FormInfoRow> _formData;
+        private readonly BindingList<PropertyRow> _propertyData;
 
         public MainForm()
         {
@@ -28,7 +28,7 @@ namespace WindowsFormsExplorer.UI.Forms
             _discoveryService = new VisualStudioDiscoveryService();
             _formData = new BindingList<FormInfoRow>();
             _propertyData = new BindingList<PropertyRow>();
-            
+
             // Configura il DataGrid, TreeView e PropertyGrid
             ConfigureDataGrid();
             ConfigureTreeView();
@@ -50,7 +50,7 @@ namespace WindowsFormsExplorer.UI.Forms
             treeViewAdv1.FullRowSelect = true;
             treeViewAdv1.Font = new Font("Segoe UI", 9.5F);
             treeViewAdv1.ItemHeight = 28;
-            
+
             // Colori per selezione
             treeViewAdv1.SelectedNodeBackground = new Syncfusion.Drawing.BrushInfo(Color.FromArgb(22, 165, 220));
             treeViewAdv1.SelectedNodeForeColor = Color.White;
@@ -60,10 +60,10 @@ namespace WindowsFormsExplorer.UI.Forms
         {
             sfDataGrid1.DataSource = _formData;
             sfDataGrid1.AutoGenerateColumns = false;
-            
+
             // Pulisci colonne esistenti prima di aggiungerne di nuove
             sfDataGrid1.Columns.Clear();
-            
+
             // Definisci colonne personalizzate
             sfDataGrid1.Columns.Add(new Syncfusion.WinForms.DataGrid.GridTextColumn()
             {
@@ -71,28 +71,28 @@ namespace WindowsFormsExplorer.UI.Forms
                 HeaderText = "Name",
                 Width = 150
             });
-            
+
             sfDataGrid1.Columns.Add(new Syncfusion.WinForms.DataGrid.GridTextColumn()
             {
                 MappingName = "Type",
                 HeaderText = "Type",
                 Width = 200
             });
-            
+
             sfDataGrid1.Columns.Add(new Syncfusion.WinForms.DataGrid.GridTextColumn()
             {
                 MappingName = "Text",
                 HeaderText = "Text",
                 Width = 250
             });
-            
+
             sfDataGrid1.Columns.Add(new Syncfusion.WinForms.DataGrid.GridTextColumn()
             {
                 MappingName = "Visible",
                 HeaderText = "Visible",
                 Width = 80
             });
-            
+
             sfDataGrid1.Columns.Add(new Syncfusion.WinForms.DataGrid.GridTextColumn()
             {
                 MappingName = "Handle",
@@ -114,13 +114,13 @@ namespace WindowsFormsExplorer.UI.Forms
                 }
                 else
                 {
-                    MessageBox.Show("You must first connect to the debugger", 
+                    MessageBox.Show("You must first connect to the debugger",
                         "Warning", MessageBoxButtons.OK, MessageBoxIcon.Warning);
                 }
             }
             catch (Exception ex)
             {
-                MessageBox.Show($"Error while connecting to debugger: {ex.Message}", 
+                MessageBox.Show($"Error while connecting to debugger: {ex.Message}",
                     "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
             }
         }
@@ -130,7 +130,7 @@ namespace WindowsFormsExplorer.UI.Forms
             try
             {
                 // Ottiene le istanze di Visual Studio
-                Result<List<VisualStudioInstance>> vsInstancesResult = 
+                Result<List<VisualStudioInstance>> vsInstancesResult =
                     _discoveryService.GetRunningInstances();
 
                 vsInstancesResult.Match(
@@ -155,19 +155,19 @@ namespace WindowsFormsExplorer.UI.Forms
                 VisualStudioInstance selectedInstance = vsSelector.SelectedInstance;
 
                 // Ottiene i processi in debug
-                Result<List<DebugProcess>> processesResult = 
+                Result<List<DebugProcess>> processesResult =
                     _discoveryService.GetDebugProcesses(selectedInstance);
 
                 if (processesResult.IsFailure)
                 {
-                    MessageBox.Show(processesResult.Error.Message, "Error", 
+                    MessageBox.Show(processesResult.Error.Message, "Error",
                         MessageBoxButtons.OK, MessageBoxIcon.Error);
                     return;
                 }
 
                 if (processesResult.Value.Count == 0)
                 {
-                    MessageBox.Show("No debug processes found in the selected instance.", 
+                    MessageBox.Show("No debug processes found in the selected instance.",
                         "Warning", MessageBoxButtons.OK, MessageBoxIcon.Warning);
                     return;
                 }
@@ -190,7 +190,7 @@ namespace WindowsFormsExplorer.UI.Forms
             }
             catch (Exception ex)
             {
-                MessageBox.Show($"Error while connecting to debugger: {ex.Message}", 
+                MessageBox.Show($"Error while connecting to debugger: {ex.Message}",
                     "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
             }
         }
@@ -204,7 +204,7 @@ namespace WindowsFormsExplorer.UI.Forms
             {
                 if (_debuggerService == null)
                 {
-                    MessageBox.Show("Debugger not connected!", "Warning", 
+                    MessageBox.Show("Debugger not connected!", "Warning",
                         MessageBoxButtons.OK, MessageBoxIcon.Warning);
                     return;
                 }
@@ -231,7 +231,7 @@ namespace WindowsFormsExplorer.UI.Forms
                     return;
 
                 // OTTIMIZZAZIONE: Carica le form in modo asincrono
-                var stopwatch = Stopwatch.StartNew();
+                Stopwatch stopwatch = Stopwatch.StartNew();
 
                 Result<List<ControlInfo>> formsResult = await _debuggerService.GetOpenFormsAsync();
 
@@ -240,7 +240,7 @@ namespace WindowsFormsExplorer.UI.Forms
 
                 if (formsResult.IsSuccess)
                 {
-                    foreach (var form in formsResult.Value)
+                    foreach (ControlInfo form in formsResult.Value)
                     {
                         _formData.Add(new FormInfoRow
                         {
@@ -256,7 +256,7 @@ namespace WindowsFormsExplorer.UI.Forms
             }
             catch (Exception ex)
             {
-                MessageBox.Show($"Error while reading forms: {ex.Message}", 
+                MessageBox.Show($"Error while reading forms: {ex.Message}",
                     "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
             }
             finally
@@ -283,7 +283,7 @@ namespace WindowsFormsExplorer.UI.Forms
 
             try
             {
-                var formData = _formData[formIndex];
+                FormInfoRow formData = _formData[formIndex];
                 string baseExpr = formData.Expression;
 
                 Syncfusion.Windows.Forms.Tools.TreeNodeAdv rootNode = new Syncfusion.Windows.Forms.Tools.TreeNodeAdv(formData.Name)
@@ -293,7 +293,7 @@ namespace WindowsFormsExplorer.UI.Forms
                 };
 
                 // OTTIMIZZAZIONE: Esplora i controlli in modo asincrono
-                var stopwatch = Stopwatch.StartNew();
+                Stopwatch stopwatch = Stopwatch.StartNew();
 
                 Result<ControlInfo> controlsResult = await _debuggerService.ExploreControlsAsync(baseExpr);
 
@@ -310,7 +310,7 @@ namespace WindowsFormsExplorer.UI.Forms
             }
             catch (Exception ex)
             {
-                MessageBox.Show($"Error while exploring controls: {ex.Message}", 
+                MessageBox.Show($"Error while exploring controls: {ex.Message}",
                     "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
             }
             finally
@@ -322,11 +322,11 @@ namespace WindowsFormsExplorer.UI.Forms
 
         private void BuildTreeNodes(Syncfusion.Windows.Forms.Tools.TreeNodeAdv parentNode, List<ControlInfo> controls)
         {
-            foreach (var control in controls)
+            foreach (ControlInfo control in controls)
             {
                 // Crea testo formattato con informazioni principali
                 string nodeText = FormatNodeText(control);
-                
+
                 Syncfusion.Windows.Forms.Tools.TreeNodeAdv node = new Syncfusion.Windows.Forms.Tools.TreeNodeAdv(nodeText)
                 {
                     Tag = control.Expression,
@@ -351,10 +351,10 @@ namespace WindowsFormsExplorer.UI.Forms
         {
             // Crea un testo ben formattato con tutte le informazioni
             string text = $"{control.Name}";
-            
+
             // Aggiungi tipo con padding
             text += $" [{control.Type}]";
-            
+
             // Aggiungi testo se presente
             if (!string.IsNullOrEmpty(control.Text))
             {
@@ -363,24 +363,24 @@ namespace WindowsFormsExplorer.UI.Forms
                     displayText = displayText.Substring(0, 37) + "...";
                 text += $" - \"{displayText}\"";
             }
-            
+
             // Aggiungi indicatore visibilità
             if (!control.Visible)
             {
                 text += " [HIDDEN]";
             }
-            
+
             return text;
         }
 
         private void ApplyNodeStyle(Syncfusion.Windows.Forms.Tools.TreeNodeAdv node, ControlInfo control)
         {
             // Colori e font basati sul tipo di controllo
-            var style = GetControlStyle(control.Type);
-            
+            ControlStyle style = GetControlStyle(control.Type);
+
             node.Font = style.Font;
             node.TextColor = style.ForeColor;
-            
+
             // Se il controllo è nascosto, usa stile diverso
             if (!control.Visible)
             {
@@ -393,57 +393,57 @@ namespace WindowsFormsExplorer.UI.Forms
         {
             // Definisci stili per tipo di controllo
             if (controlType.Contains("Button"))
-                return new ControlStyle 
-                { 
+                return new ControlStyle
+                {
                     ForeColor = Color.FromArgb(0, 120, 215),    // Blu
                     Font = new Font("Segoe UI", 9.5F, FontStyle.Bold)
                 };
-            
+
             if (controlType.Contains("Label"))
-                return new ControlStyle 
-                { 
+                return new ControlStyle
+                {
                     ForeColor = Color.FromArgb(16, 124, 16),    // Verde scuro
                     Font = new Font("Segoe UI", 9.5F, FontStyle.Regular)
                 };
-            
+
             if (controlType.Contains("TextBox") || controlType.Contains("RichTextBox") || controlType.Contains("MaskedTextBox"))
-                return new ControlStyle 
-                { 
+                return new ControlStyle
+                {
                     ForeColor = Color.FromArgb(139, 69, 19),    // Marrone
                     Font = new Font("Segoe UI", 9.5F, FontStyle.Regular)
                 };
-            
+
             if (controlType.Contains("Panel") || controlType.Contains("GroupBox") || controlType.Contains("TabControl"))
-                return new ControlStyle 
-                { 
+                return new ControlStyle
+                {
                     ForeColor = Color.FromArgb(75, 75, 75),     // Grigio scuro
                     Font = new Font("Segoe UI", 9.5F, FontStyle.Bold)
                 };
-            
+
             if (controlType.Contains("ComboBox") || controlType.Contains("ListBox") || controlType.Contains("CheckedListBox"))
-                return new ControlStyle 
-                { 
+                return new ControlStyle
+                {
                     ForeColor = Color.FromArgb(128, 0, 128),    // Viola
                     Font = new Font("Segoe UI", 9.5F, FontStyle.Regular)
                 };
-            
+
             if (controlType.Contains("DataGrid") || controlType.Contains("ListView") || controlType.Contains("TreeView"))
-                return new ControlStyle 
-                { 
+                return new ControlStyle
+                {
                     ForeColor = Color.FromArgb(0, 100, 100),    // Teal
                     Font = new Font("Segoe UI", 9.5F, FontStyle.Bold)
                 };
-            
+
             if (controlType.Contains("PictureBox") || controlType.Contains("Image"))
-                return new ControlStyle 
-                { 
+                return new ControlStyle
+                {
                     ForeColor = Color.FromArgb(255, 140, 0),    // Arancione scuro
                     Font = new Font("Segoe UI", 9.5F, FontStyle.Regular)
                 };
-            
+
             // Default per altri controlli
-            return new ControlStyle 
-            { 
+            return new ControlStyle
+            {
                 ForeColor = Color.Black,
                 Font = new Font("Segoe UI", 9.5F, FontStyle.Regular)
             };
@@ -466,13 +466,13 @@ namespace WindowsFormsExplorer.UI.Forms
                 }
                 else
                 {
-                    MessageBox.Show("You must first connect to the debugger", 
+                    MessageBox.Show("You must first connect to the debugger",
                         "Warning", MessageBoxButtons.OK, MessageBoxIcon.Warning);
                 }
             }
             catch (Exception ex)
             {
-                MessageBox.Show($"Error while updating: {ex.Message}", 
+                MessageBox.Show($"Error while updating: {ex.Message}",
                     "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
             }
         }
@@ -499,7 +499,7 @@ namespace WindowsFormsExplorer.UI.Forms
         private async Task LoadControlPropertiesAsync(string controlExpression)
         {
             _propertyData.Clear();
-            
+
             if (_debuggerService == null)
                 return;
 
@@ -509,11 +509,11 @@ namespace WindowsFormsExplorer.UI.Forms
                 propertyGridLabel.Text = "Properties (Loading...)";
 
                 // DISCOVERY DINAMICO: Ottiene tutte le proprietà usando reflection
-                var stopwatch = Stopwatch.StartNew();
-                
+                Stopwatch stopwatch = Stopwatch.StartNew();
+
                 // Ottiene il tipo del controllo
                 Result<string> typeNameResult = _debuggerService.EvaluateExpression($"{controlExpression}.GetType().FullName");
-                
+
                 if (typeNameResult.IsFailure || string.IsNullOrEmpty(typeNameResult.Value))
                 {
                     Debug.WriteLine("Unable to get control type");
@@ -529,12 +529,12 @@ namespace WindowsFormsExplorer.UI.Forms
                 Debug.WriteLine($"Discovered {propertyNames.Count} properties");
 
                 // Costruisce le espressioni da valutare
-                var propertyExpressions = propertyNames
+                List<string> propertyExpressions = propertyNames
                     .Select(prop => $"{controlExpression}.{prop}")
                     .ToList();
 
                 // Valuta tutte le proprietà in batch
-                Result<Dictionary<string, string>> propertyResult = 
+                Result<Dictionary<string, string>> propertyResult =
                     await _debuggerService.EvaluateExpressionsAsync(propertyExpressions);
 
                 stopwatch.Stop();
@@ -542,14 +542,14 @@ namespace WindowsFormsExplorer.UI.Forms
 
                 if (propertyResult.IsSuccess)
                 {
-                    foreach (var prop in propertyNames)
+                    foreach (string prop in propertyNames)
                     {
                         string fullExpression = $"{controlExpression}.{prop}";
                         if (propertyResult.Value.TryGetValue(fullExpression, out string value))
                         {
                             // Salta valori nulli, vuoti o errori di compilazione
-                            if (!string.IsNullOrEmpty(value) && 
-                                value != "null" && 
+                            if (!string.IsNullOrEmpty(value) &&
+                                value != "null" &&
                                 !value.Contains("error CS") &&
                                 !value.Contains("Exception"))
                             {
@@ -591,7 +591,7 @@ namespace WindowsFormsExplorer.UI.Forms
 
         private async Task<List<string>> DiscoverPropertiesAsync(string controlExpression)
         {
-            var properties = new List<string>();
+            List<string> properties = new List<string>();
 
             try
             {
@@ -610,7 +610,7 @@ namespace WindowsFormsExplorer.UI.Forms
                     {
                         // Ottiene informazioni sulla proprietà
                         string propInfoExpr = $"{controlExpression}.GetType().GetProperties(System.Reflection.BindingFlags.Public | System.Reflection.BindingFlags.Instance)[{i}]";
-                        
+
                         // Nome proprietà
                         string propNameExpr = $"{propInfoExpr}.Name";
                         Result<string> propNameResult = _debuggerService.EvaluateExpression(propNameExpr);
@@ -618,11 +618,11 @@ namespace WindowsFormsExplorer.UI.Forms
                         if (propNameResult.IsSuccess && !string.IsNullOrEmpty(propNameResult.Value))
                         {
                             string propName = propNameResult.Value.Trim('"');
-                            
+
                             // Verifica se la proprietà può essere letta (ha un getter pubblico)
                             string canReadExpr = $"{propInfoExpr}.CanRead";
                             Result<string> canReadResult = _debuggerService.EvaluateExpression(canReadExpr);
-                            
+
                             if (canReadResult.IsFailure || canReadResult.Value != "true")
                             {
                                 Debug.WriteLine($"Skipping {propName}: cannot read");
@@ -632,13 +632,13 @@ namespace WindowsFormsExplorer.UI.Forms
                             // Verifica se la proprietà ha parametri (è un indexer)
                             string hasParamsExpr = $"{propInfoExpr}.GetIndexParameters().Length";
                             Result<string> hasParamsResult = _debuggerService.EvaluateExpression(hasParamsExpr);
-                            
+
                             if (hasParamsResult.IsSuccess && hasParamsResult.Value != "0")
                             {
                                 Debug.WriteLine($"Skipping {propName}: is an indexer");
                                 continue;
                             }
-                            
+
                             // Filtra proprietà che potrebbero causare problemi
                             if (!ShouldSkipProperty(propName))
                             {
@@ -663,7 +663,7 @@ namespace WindowsFormsExplorer.UI.Forms
         private bool ShouldSkipProperty(string propertyName)
         {
             // Salta proprietà che potrebbero causare problemi o che non sono informative
-            var skipList = new HashSet<string>(StringComparer.OrdinalIgnoreCase)
+            HashSet<string> skipList = new HashSet<string>(StringComparer.OrdinalIgnoreCase)
             {
                 // Proprietà che causano problemi con EnvDTE
                 "Handle", "Parent", "Container", "Site", "BindingContext",

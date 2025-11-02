@@ -23,7 +23,7 @@ namespace WindowsFormsExplorer.Core.Common
             new Result<T>(true, value, Error.None);
 
         public static Result<T> Failure(Error error) =>
-            new Result<T>(false, default(T), error);
+            new Result<T>(false, default, error);
 
         public static implicit operator Result<T>(T value) =>
             Success(value);

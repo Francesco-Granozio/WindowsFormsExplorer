@@ -11,7 +11,7 @@ namespace WindowsFormsExplorer.UI
         /// Punto di ingresso principale dell'applicazione.
         /// </summary>
         [STAThread]
-        static void Main()
+        private static void Main()
         {
             // Registra il message filter per gestire chiamate COM
             MessageFilter.Register();

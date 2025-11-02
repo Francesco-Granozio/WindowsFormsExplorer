@@ -10,7 +10,7 @@ namespace WindowsFormsExplorer.UI.Forms
     public partial class ProcessSelectorForm : Form
     {
         private readonly List<DebugProcess> _processes;
-        private BindingList<ProcessRow> _processData;
+        private readonly BindingList<ProcessRow> _processData;
         public DebugProcess SelectedProcess { get; private set; }
 
         public ProcessSelectorForm(List<DebugProcess> processes)
@@ -28,7 +28,7 @@ namespace WindowsFormsExplorer.UI.Forms
 
         private void LoadGrid()
         {
-            foreach (var process in _processes)
+            foreach (DebugProcess process in _processes)
             {
                 if (process == null)
                     continue;
@@ -56,17 +56,17 @@ namespace WindowsFormsExplorer.UI.Forms
         {
             if (sfDataGrid1.SelectedIndex < 0 || sfDataGrid1.SelectedIndex >= _processData.Count)
             {
-                MessageBox.Show("No row selected. Please select a process.", 
+                MessageBox.Show("No row selected. Please select a process.",
                     "Warning", MessageBoxButtons.OK, MessageBoxIcon.Warning);
                 return;
             }
 
-            var selectedRow = _processData[sfDataGrid1.SelectedIndex];
+            ProcessRow selectedRow = _processData[sfDataGrid1.SelectedIndex];
             SelectedProcess = _processes.FirstOrDefault(p => p.ProcessId == selectedRow.ProcessId);
 
             if (SelectedProcess == null)
             {
-                MessageBox.Show("Selected process not found. Please try again.", 
+                MessageBox.Show("Selected process not found. Please try again.",
                     "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
                 return;
             }

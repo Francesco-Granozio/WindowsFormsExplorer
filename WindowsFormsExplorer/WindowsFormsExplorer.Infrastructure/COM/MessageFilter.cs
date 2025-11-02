@@ -12,14 +12,12 @@ namespace WindowsFormsExplorer.Infrastructure.COM
         public static void Register()
         {
             IOleMessageFilter newFilter = new MessageFilter();
-            IOleMessageFilter oldFilter = null;
-            CoRegisterMessageFilter(newFilter, out oldFilter);
+            CoRegisterMessageFilter(newFilter, out IOleMessageFilter oldFilter);
         }
 
         public static void Revoke()
         {
-            IOleMessageFilter oldFilter = null;
-            CoRegisterMessageFilter(null, out oldFilter);
+            CoRegisterMessageFilter(null, out IOleMessageFilter oldFilter);
         }
 
         int IOleMessageFilter.HandleInComingCall(int dwCallType,
@@ -52,7 +50,7 @@ namespace WindowsFormsExplorer.Infrastructure.COM
 
     [ComImport(), Guid("00000016-0000-0000-C000-000000000046"),
     InterfaceTypeAttribute(ComInterfaceType.InterfaceIsIUnknown)]
-    interface IOleMessageFilter
+    internal interface IOleMessageFilter
     {
         [PreserveSig]
         int HandleInComingCall(int dwCallType, IntPtr hTaskCaller,

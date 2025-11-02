@@ -1,7 +1,6 @@
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
-using System.Linq;
 using System.Runtime.InteropServices;
 using System.Threading.Tasks;
 using WindowsFormsExplorer.Core.Common;
@@ -87,8 +86,8 @@ namespace WindowsFormsExplorer.Infrastructure.Debugger
                     {
                         // OTTIMIZZAZIONE: Batch query per ridurre le chiamate a EnvDTE
                         string baseExpr = $"System.Windows.Forms.Application.OpenForms[{i}]";
-                        
-                        var expressions = new[]
+
+                        string[] expressions = new[]
                         {
                             $"{baseExpr}.Name",
                             $"{baseExpr}.Text",
@@ -97,7 +96,7 @@ namespace WindowsFormsExplorer.Infrastructure.Debugger
                             $"{baseExpr}.GetType().FullName"
                         };
 
-                        var results = EvaluateBatchExpressionsInternal(expressions);
+                        Dictionary<string, string> results = EvaluateBatchExpressionsInternal(expressions);
 
                         string name = GetValueOrDefault(results, $"{baseExpr}.Name", $"Form_{i}");
                         string text = GetValueOrDefault(results, $"{baseExpr}.Text", "N/A");
@@ -127,7 +126,7 @@ namespace WindowsFormsExplorer.Infrastructure.Debugger
                     if (depth >= maxDepth)
                         return Result<ControlInfo>.Failure(new Error(ErrorCode.ControlQueryFailed, "Max depth reached"));
 
-                    var stopwatch = Stopwatch.StartNew();
+                    Stopwatch stopwatch = Stopwatch.StartNew();
 
                     // Ottiene il numero di controlli figli
                     string controlsExpr = $"{baseExpression}.Controls";
@@ -155,7 +154,7 @@ namespace WindowsFormsExplorer.Infrastructure.Debugger
                         string childExpr = $"{baseExpression}.Controls[{i}]";
 
                         // OTTIMIZZAZIONE: Batch query per ogni controllo
-                        var expressions = new[]
+                        string[] expressions = new[]
                         {
                             $"{childExpr}.Name",
                             $"{childExpr}.GetType().Name",
@@ -163,7 +162,7 @@ namespace WindowsFormsExplorer.Infrastructure.Debugger
                             $"{childExpr}.Visible"
                         };
 
-                        var results = EvaluateBatchExpressionsInternal(expressions);
+                        Dictionary<string, string> results = EvaluateBatchExpressionsInternal(expressions);
 
                         string name = GetValueOrDefault(results, $"{childExpr}.Name", $"Control_{i}");
                         string type = GetValueOrDefault(results, $"{childExpr}.GetType().Name", "Unknown");
@@ -174,7 +173,7 @@ namespace WindowsFormsExplorer.Infrastructure.Debugger
                         ControlInfo child = new ControlInfo(childExpr, name, type, text, visible, "");
 
                         // Ricorsione per i controlli figli
-                        var childResult = ExploreControlsAsync(childExpr, depth + 1, maxDepth).Result;
+                        Result<ControlInfo> childResult = ExploreControlsAsync(childExpr, depth + 1, maxDepth).Result;
                         if (childResult.IsSuccess && childResult.Value.Children != null)
                         {
                             child.Children = childResult.Value.Children;
@@ -200,7 +199,7 @@ namespace WindowsFormsExplorer.Infrastructure.Debugger
             try
             {
                 string value = EvaluateExpressionInternal(expression);
-                return value != null ? Result<string>.Success(value) : 
+                return value != null ? Result<string>.Success(value) :
                     Result<string>.Failure(new Error(ErrorCode.ControlQueryFailed, "Failed to evaluate expression"));
             }
             catch (Exception ex)
@@ -215,7 +214,7 @@ namespace WindowsFormsExplorer.Infrastructure.Debugger
             {
                 try
                 {
-                    var results = EvaluateBatchExpressionsInternal(expressions);
+                    Dictionary<string, string> results = EvaluateBatchExpressionsInternal(expressions);
                     return Result<Dictionary<string, string>>.Success(results);
                 }
                 catch (Exception ex)
@@ -231,9 +230,9 @@ namespace WindowsFormsExplorer.Infrastructure.Debugger
         /// </summary>
         private Dictionary<string, string> EvaluateBatchExpressionsInternal(IEnumerable<string> expressions)
         {
-            var results = new Dictionary<string, string>();
+            Dictionary<string, string> results = new Dictionary<string, string>();
 
-            foreach (var expr in expressions)
+            foreach (string expr in expressions)
             {
                 string value = EvaluateExpressionInternal(expr);
                 results[expr] = value;
@@ -309,7 +308,7 @@ namespace WindowsFormsExplorer.Infrastructure.Debugger
             if (!_disposed)
             {
                 _cache?.Clear();
-                
+
                 if (_dte != null)
                 {
                     try

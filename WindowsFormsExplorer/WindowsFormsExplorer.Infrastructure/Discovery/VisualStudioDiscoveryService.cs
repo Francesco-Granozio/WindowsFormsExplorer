@@ -24,7 +24,7 @@ namespace WindowsFormsExplorer.Infrastructure.Discovery
         {
             try
             {
-                var instances = new List<VisualStudioInstance>();
+                List<VisualStudioInstance> instances = new List<VisualStudioInstance>();
 
                 // Ottiene la Running Object Table (ROT)
                 GetRunningObjectTable(0, out IRunningObjectTable rot);
@@ -102,8 +102,8 @@ namespace WindowsFormsExplorer.Infrastructure.Discovery
                         "No Visual Studio instance selected.");
                 }
 
-                var dte = (EnvDTE80.DTE2)instance.NativeInstance;
-                var processes = new List<DebugProcess>();
+                EnvDTE80.DTE2 dte = (EnvDTE80.DTE2)instance.NativeInstance;
+                List<DebugProcess> processes = new List<DebugProcess>();
 
                 foreach (EnvDTE80.Process2 process in dte.Debugger.DebuggedProcesses)
                 {
