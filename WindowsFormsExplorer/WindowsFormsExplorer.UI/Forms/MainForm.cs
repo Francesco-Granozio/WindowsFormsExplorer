@@ -29,76 +29,9 @@ namespace WindowsFormsExplorer.UI.Forms
             _formData = new BindingList<FormInfoRow>();
             _propertyData = new BindingList<PropertyRow>();
 
-            // Configura il DataGrid, TreeView e PropertyGrid
-            ConfigureDataGrid();
-            ConfigureTreeView();
-            ConfigurePropertyGrid();
-        }
-
-        private void ConfigurePropertyGrid()
-        {
-            sfDataGridProperties.DataSource = _propertyData;
-        }
-
-        private void ConfigureTreeView()
-        {
-            // Configura stile e aspetto del TreeView
-            treeViewAdv1.Style = Syncfusion.Windows.Forms.Tools.TreeStyle.Office2016Colorful;
-            treeViewAdv1.ShowLines = true;
-            treeViewAdv1.ShowPlusMinus = true;
-            treeViewAdv1.ShowRootLines = true;
-            treeViewAdv1.FullRowSelect = true;
-            treeViewAdv1.Font = new Font("Segoe UI", 9.5F);
-            treeViewAdv1.ItemHeight = 28;
-
-            // Colori per selezione
-            treeViewAdv1.SelectedNodeBackground = new Syncfusion.Drawing.BrushInfo(Color.FromArgb(22, 165, 220));
-            treeViewAdv1.SelectedNodeForeColor = Color.White;
-        }
-
-        private void ConfigureDataGrid()
-        {
+            // Configura solo il DataSource (dinamico, non può essere nel designer)
             sfDataGrid1.DataSource = _formData;
-            sfDataGrid1.AutoGenerateColumns = false;
-
-            // Pulisci colonne esistenti prima di aggiungerne di nuove
-            sfDataGrid1.Columns.Clear();
-
-            // Definisci colonne personalizzate
-            sfDataGrid1.Columns.Add(new Syncfusion.WinForms.DataGrid.GridTextColumn()
-            {
-                MappingName = "Name",
-                HeaderText = "Name",
-                Width = 150
-            });
-
-            sfDataGrid1.Columns.Add(new Syncfusion.WinForms.DataGrid.GridTextColumn()
-            {
-                MappingName = "Type",
-                HeaderText = "Type",
-                Width = 200
-            });
-
-            sfDataGrid1.Columns.Add(new Syncfusion.WinForms.DataGrid.GridTextColumn()
-            {
-                MappingName = "Text",
-                HeaderText = "Text",
-                Width = 250
-            });
-
-            sfDataGrid1.Columns.Add(new Syncfusion.WinForms.DataGrid.GridTextColumn()
-            {
-                MappingName = "Visible",
-                HeaderText = "Visible",
-                Width = 80
-            });
-
-            sfDataGrid1.Columns.Add(new Syncfusion.WinForms.DataGrid.GridTextColumn()
-            {
-                MappingName = "Handle",
-                HeaderText = "Handle",
-                Width = 100
-            });
+            sfDataGridProperties.DataSource = _propertyData;
         }
 
         private async void btnConnect_Click(object sender, EventArgs e)

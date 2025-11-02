@@ -31,14 +31,23 @@ namespace WindowsFormsExplorer.UI.Forms
         /// </summary>
         private void InitializeComponent()
         {
+            this.components = new System.ComponentModel.Container();
+            Syncfusion.WinForms.DataGrid.GridTextColumn gridTextColumn1 = new Syncfusion.WinForms.DataGrid.GridTextColumn();
+            Syncfusion.WinForms.DataGrid.GridTextColumn gridTextColumn2 = new Syncfusion.WinForms.DataGrid.GridTextColumn();
+            Syncfusion.WinForms.DataGrid.GridTextColumn gridTextColumn3 = new Syncfusion.WinForms.DataGrid.GridTextColumn();
+            Syncfusion.WinForms.DataGrid.GridTextColumn gridTextColumn4 = new Syncfusion.WinForms.DataGrid.GridTextColumn();
+            Syncfusion.WinForms.DataGrid.GridTextColumn gridTextColumn5 = new Syncfusion.WinForms.DataGrid.GridTextColumn();
+            Syncfusion.Windows.Forms.Tools.TreeNodeAdvStyleInfo treeNodeAdvStyleInfo1 = new Syncfusion.Windows.Forms.Tools.TreeNodeAdvStyleInfo();
+            Syncfusion.WinForms.DataGrid.GridTextColumn gridTextColumn6 = new Syncfusion.WinForms.DataGrid.GridTextColumn();
+            Syncfusion.WinForms.DataGrid.GridTextColumn gridTextColumn7 = new Syncfusion.WinForms.DataGrid.GridTextColumn();
             System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(MainForm));
             this.splitContainer = new System.Windows.Forms.SplitContainer();
             this.sfDataGrid1 = new Syncfusion.WinForms.DataGrid.SfDataGrid();
             this.splitContainerRight = new System.Windows.Forms.SplitContainer();
             this.treeViewAdv1 = new Syncfusion.Windows.Forms.Tools.TreeViewAdv();
             this.propertyPanel = new Syncfusion.Windows.Forms.Tools.GradientPanel();
-            this.propertyGridLabel = new System.Windows.Forms.Label();
             this.sfDataGridProperties = new Syncfusion.WinForms.DataGrid.SfDataGrid();
+            this.propertyGridLabel = new System.Windows.Forms.Label();
             this.gradientPanel1 = new Syncfusion.Windows.Forms.Tools.GradientPanel();
             this.btnConnect = new Syncfusion.Windows.Forms.ButtonAdv();
             this.btnRefresh = new Syncfusion.Windows.Forms.ButtonAdv();
@@ -46,11 +55,11 @@ namespace WindowsFormsExplorer.UI.Forms
             this.splitContainer.Panel1.SuspendLayout();
             this.splitContainer.Panel2.SuspendLayout();
             this.splitContainer.SuspendLayout();
+            ((System.ComponentModel.ISupportInitialize)(this.sfDataGrid1)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.splitContainerRight)).BeginInit();
             this.splitContainerRight.Panel1.SuspendLayout();
             this.splitContainerRight.Panel2.SuspendLayout();
             this.splitContainerRight.SuspendLayout();
-            ((System.ComponentModel.ISupportInitialize)(this.sfDataGrid1)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.treeViewAdv1)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.propertyPanel)).BeginInit();
             this.propertyPanel.SuspendLayout();
@@ -76,6 +85,51 @@ namespace WindowsFormsExplorer.UI.Forms
             this.splitContainer.SplitterDistance = 400;
             this.splitContainer.TabIndex = 0;
             // 
+            // sfDataGrid1
+            // 
+            this.sfDataGrid1.AccessibleName = "Table";
+            this.sfDataGrid1.AllowEditing = false;
+            this.sfDataGrid1.AllowFiltering = true;
+            this.sfDataGrid1.AllowResizingColumns = true;
+            this.sfDataGrid1.AutoGenerateColumns = false;
+            this.sfDataGrid1.AutoSizeColumnsMode = Syncfusion.WinForms.DataGrid.Enums.AutoSizeColumnsMode.Fill;
+            gridTextColumn1.AllowEditing = false;
+            gridTextColumn1.AllowFiltering = true;
+            gridTextColumn1.AllowResizing = true;
+            gridTextColumn1.HeaderText = "Column1";
+            gridTextColumn1.MappingName = "Column1";
+            gridTextColumn2.AllowEditing = false;
+            gridTextColumn2.AllowFiltering = true;
+            gridTextColumn2.AllowResizing = true;
+            gridTextColumn2.HeaderText = "Column2";
+            gridTextColumn2.MappingName = "Column2";
+            gridTextColumn3.AllowEditing = false;
+            gridTextColumn3.AllowFiltering = true;
+            gridTextColumn3.AllowResizing = true;
+            gridTextColumn3.HeaderText = "Column3";
+            gridTextColumn3.MappingName = "Column3";
+            gridTextColumn4.AllowEditing = false;
+            gridTextColumn4.AllowFiltering = true;
+            gridTextColumn4.AllowResizing = true;
+            gridTextColumn4.HeaderText = "Column4";
+            gridTextColumn4.MappingName = "Column4";
+            gridTextColumn5.AllowEditing = false;
+            gridTextColumn5.AllowFiltering = true;
+            gridTextColumn5.AllowResizing = true;
+            gridTextColumn5.HeaderText = "Column5";
+            gridTextColumn5.MappingName = "Column5";
+            this.sfDataGrid1.Columns.Add(gridTextColumn1);
+            this.sfDataGrid1.Columns.Add(gridTextColumn2);
+            this.sfDataGrid1.Columns.Add(gridTextColumn3);
+            this.sfDataGrid1.Columns.Add(gridTextColumn4);
+            this.sfDataGrid1.Columns.Add(gridTextColumn5);
+            this.sfDataGrid1.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.sfDataGrid1.Location = new System.Drawing.Point(0, 0);
+            this.sfDataGrid1.Name = "sfDataGrid1";
+            this.sfDataGrid1.Size = new System.Drawing.Size(400, 701);
+            this.sfDataGrid1.TabIndex = 0;
+            this.sfDataGrid1.SelectionChanged += new Syncfusion.WinForms.DataGrid.Events.SelectionChangedEventHandler(this.sfDataGrid1_SelectionChanged);
+            // 
             // splitContainerRight
             // 
             this.splitContainerRight.Dock = System.Windows.Forms.DockStyle.Fill;
@@ -93,29 +147,31 @@ namespace WindowsFormsExplorer.UI.Forms
             this.splitContainerRight.SplitterDistance = 480;
             this.splitContainerRight.TabIndex = 0;
             // 
-            // sfDataGrid1
-            // 
-            this.sfDataGrid1.AccessibleName = "Table";
-            this.sfDataGrid1.AllowEditing = false;
-            this.sfDataGrid1.AllowFiltering = true;
-            this.sfDataGrid1.AllowResizingColumns = true;
-            this.sfDataGrid1.AutoSizeColumnsMode = Syncfusion.WinForms.DataGrid.Enums.AutoSizeColumnsMode.Fill;
-            this.sfDataGrid1.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.sfDataGrid1.Location = new System.Drawing.Point(0, 0);
-            this.sfDataGrid1.Name = "sfDataGrid1";
-            this.sfDataGrid1.SelectionMode = Syncfusion.WinForms.DataGrid.Enums.GridSelectionMode.Single;
-            this.sfDataGrid1.Size = new System.Drawing.Size(500, 701);
-            this.sfDataGrid1.TabIndex = 0;
-            this.sfDataGrid1.SelectionChanged += new Syncfusion.WinForms.DataGrid.Events.SelectionChangedEventHandler(this.sfDataGrid1_SelectionChanged);
-            // 
             // treeViewAdv1
             // 
             this.treeViewAdv1.BackColor = System.Drawing.Color.White;
-            this.treeViewAdv1.BeforeTouchSize = new System.Drawing.Size(480, 701);
+            this.treeViewAdv1.BackgroundColor = new Syncfusion.Drawing.BrushInfo(System.Drawing.Color.FromArgb(((int)(((byte)(255)))), ((int)(((byte)(255)))), ((int)(((byte)(255))))));
+            treeNodeAdvStyleInfo1.CheckBoxTickThickness = 1;
+            treeNodeAdvStyleInfo1.CheckColor = System.Drawing.Color.FromArgb(((int)(((byte)(109)))), ((int)(((byte)(109)))), ((int)(((byte)(109)))));
+            treeNodeAdvStyleInfo1.EnsureDefaultOptionedChild = true;
+            treeNodeAdvStyleInfo1.Font = new System.Drawing.Font("Segoe UI", 9.5F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            treeNodeAdvStyleInfo1.IntermediateCheckColor = System.Drawing.Color.FromArgb(((int)(((byte)(109)))), ((int)(((byte)(109)))), ((int)(((byte)(109)))));
+            treeNodeAdvStyleInfo1.OptionButtonColor = System.Drawing.Color.FromArgb(((int)(((byte)(109)))), ((int)(((byte)(109)))), ((int)(((byte)(109)))));
+            treeNodeAdvStyleInfo1.SelectedOptionButtonColor = System.Drawing.Color.FromArgb(((int)(((byte)(210)))), ((int)(((byte)(210)))), ((int)(((byte)(210)))));
+            treeNodeAdvStyleInfo1.ShowPlusMinus = true;
+            treeNodeAdvStyleInfo1.TextColor = System.Drawing.Color.FromArgb(((int)(((byte)(43)))), ((int)(((byte)(43)))), ((int)(((byte)(43)))));
+            this.treeViewAdv1.BaseStylePairs.AddRange(new Syncfusion.Windows.Forms.Tools.StyleNamePair[] {
+            new Syncfusion.Windows.Forms.Tools.StyleNamePair("Standard", treeNodeAdvStyleInfo1)});
             this.treeViewAdv1.Border3DStyle = System.Windows.Forms.Border3DStyle.Flat;
             this.treeViewAdv1.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle;
             this.treeViewAdv1.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.treeViewAdv1.Font = new System.Drawing.Font("Segoe UI", 9.5F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.treeViewAdv1.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(43)))), ((int)(((byte)(43)))), ((int)(((byte)(43)))));
             this.treeViewAdv1.FullRowSelect = true;
+            // 
+            // 
+            // 
+            this.treeViewAdv1.HelpTextControl.BaseThemeName = null;
             this.treeViewAdv1.HelpTextControl.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle;
             this.treeViewAdv1.HelpTextControl.Location = new System.Drawing.Point(0, 0);
             this.treeViewAdv1.HelpTextControl.Name = "helpText";
@@ -123,26 +179,34 @@ namespace WindowsFormsExplorer.UI.Forms
             this.treeViewAdv1.HelpTextControl.TabIndex = 0;
             this.treeViewAdv1.HelpTextControl.Text = "help text";
             this.treeViewAdv1.InactiveSelectedNodeForeColor = System.Drawing.SystemColors.ControlText;
+            this.treeViewAdv1.ItemHeight = 28;
+            this.treeViewAdv1.LineColor = System.Drawing.Color.FromArgb(((int)(((byte)(94)))), ((int)(((byte)(94)))), ((int)(((byte)(94)))));
             this.treeViewAdv1.Location = new System.Drawing.Point(0, 0);
             this.treeViewAdv1.MetroColor = System.Drawing.Color.FromArgb(((int)(((byte)(22)))), ((int)(((byte)(165)))), ((int)(((byte)(220)))));
             this.treeViewAdv1.Name = "treeViewAdv1";
-            this.treeViewAdv1.SelectedNodeForeColor = System.Drawing.SystemColors.HighlightText;
-            this.treeViewAdv1.ShowLines = true;
+            this.treeViewAdv1.SelectedNodeBackground = new Syncfusion.Drawing.BrushInfo(System.Drawing.Color.FromArgb(((int)(((byte)(197)))), ((int)(((byte)(197)))), ((int)(((byte)(197))))));
+            this.treeViewAdv1.SelectedNodeForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(43)))), ((int)(((byte)(43)))), ((int)(((byte)(43)))));
+            this.treeViewAdv1.ShowFocusRect = false;
             this.treeViewAdv1.Size = new System.Drawing.Size(480, 701);
             this.treeViewAdv1.Style = Syncfusion.Windows.Forms.Tools.TreeStyle.Office2016Colorful;
             this.treeViewAdv1.TabIndex = 0;
             this.treeViewAdv1.Text = "treeViewAdv1";
-            this.treeViewAdv1.AfterSelect += new System.EventHandler(this.treeViewAdv1_AfterSelect);
+            this.treeViewAdv1.ThemeName = "Office2016Colorful";
+            this.treeViewAdv1.ThemeStyle.TreeNodeAdvStyle.CheckBoxTickThickness = 0;
+            this.treeViewAdv1.ThemeStyle.TreeNodeAdvStyle.EnsureDefaultOptionedChild = true;
             // 
-            // ToolTip for treeViewAdv1
+            // 
             // 
             this.treeViewAdv1.ToolTipControl.BackColor = System.Drawing.SystemColors.Info;
+            this.treeViewAdv1.ToolTipControl.BaseThemeName = null;
             this.treeViewAdv1.ToolTipControl.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle;
             this.treeViewAdv1.ToolTipControl.Location = new System.Drawing.Point(0, 0);
             this.treeViewAdv1.ToolTipControl.Name = "toolTip";
             this.treeViewAdv1.ToolTipControl.Size = new System.Drawing.Size(41, 15);
             this.treeViewAdv1.ToolTipControl.TabIndex = 1;
             this.treeViewAdv1.ToolTipControl.Text = "toolTip";
+            this.treeViewAdv1.TransparentControls = true;
+            this.treeViewAdv1.AfterSelect += new System.EventHandler(this.treeViewAdv1_AfterSelect);
             // 
             // propertyPanel
             // 
@@ -157,6 +221,33 @@ namespace WindowsFormsExplorer.UI.Forms
             this.propertyPanel.Size = new System.Drawing.Size(296, 701);
             this.propertyPanel.TabIndex = 0;
             // 
+            // sfDataGridProperties
+            // 
+            this.sfDataGridProperties.AccessibleName = "Table";
+            this.sfDataGridProperties.AllowEditing = false;
+            this.sfDataGridProperties.AllowResizingColumns = true;
+            this.sfDataGridProperties.AutoGenerateColumns = false;
+            this.sfDataGridProperties.AutoSizeColumnsMode = Syncfusion.WinForms.DataGrid.Enums.AutoSizeColumnsMode.Fill;
+            gridTextColumn6.AllowEditing = false;
+            gridTextColumn6.AllowResizing = true;
+            gridTextColumn6.HeaderText = "Column1";
+            gridTextColumn6.MappingName = "Column1";
+            gridTextColumn7.AllowEditing = false;
+            gridTextColumn7.AllowResizing = true;
+            gridTextColumn7.HeaderText = "Column2";
+            gridTextColumn7.MappingName = "Column2";
+            this.sfDataGridProperties.Columns.Add(gridTextColumn6);
+            this.sfDataGridProperties.Columns.Add(gridTextColumn7);
+            this.sfDataGridProperties.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.sfDataGridProperties.Location = new System.Drawing.Point(0, 35);
+            this.sfDataGridProperties.Name = "sfDataGridProperties";
+            this.sfDataGridProperties.RowHeight = 21;
+            this.sfDataGridProperties.Size = new System.Drawing.Size(294, 664);
+            this.sfDataGridProperties.Style.HeaderStyle.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(68)))), ((int)(((byte)(114)))), ((int)(((byte)(196)))));
+            this.sfDataGridProperties.Style.HeaderStyle.Font.Bold = true;
+            this.sfDataGridProperties.Style.HeaderStyle.TextColor = System.Drawing.Color.White;
+            this.sfDataGridProperties.TabIndex = 1;
+            // 
             // propertyGridLabel
             // 
             this.propertyGridLabel.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(240)))), ((int)(((byte)(240)))), ((int)(((byte)(240)))));
@@ -170,39 +261,6 @@ namespace WindowsFormsExplorer.UI.Forms
             this.propertyGridLabel.TabIndex = 0;
             this.propertyGridLabel.Text = "Properties";
             this.propertyGridLabel.TextAlign = System.Drawing.ContentAlignment.MiddleLeft;
-            // 
-            // sfDataGridProperties
-            // 
-            this.sfDataGridProperties.AccessibleName = "Table";
-            this.sfDataGridProperties.AllowEditing = false;
-            this.sfDataGridProperties.AllowResizingColumns = true;
-            this.sfDataGridProperties.AutoGenerateColumns = false;
-            this.sfDataGridProperties.AutoSizeColumnsMode = Syncfusion.WinForms.DataGrid.Enums.AutoSizeColumnsMode.Fill;
-            this.sfDataGridProperties.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.sfDataGridProperties.Location = new System.Drawing.Point(0, 35);
-            this.sfDataGridProperties.Name = "sfDataGridProperties";
-            this.sfDataGridProperties.RowHeight = 21;
-            this.sfDataGridProperties.SelectionMode = Syncfusion.WinForms.DataGrid.Enums.GridSelectionMode.Single;
-            this.sfDataGridProperties.Size = new System.Drawing.Size(294, 664);
-            this.sfDataGridProperties.Style.HeaderStyle.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(68)))), ((int)(((byte)(114)))), ((int)(((byte)(196)))));
-            this.sfDataGridProperties.Style.HeaderStyle.Font.Bold = true;
-            this.sfDataGridProperties.Style.HeaderStyle.TextColor = System.Drawing.Color.White;
-            this.sfDataGridProperties.TabIndex = 1;
-            // 
-            // Columns configuration for Properties Grid
-            // 
-            this.sfDataGridProperties.Columns.Add(new Syncfusion.WinForms.DataGrid.GridTextColumn()
-            {
-                MappingName = "PropertyName",
-                HeaderText = "Property",
-                Width = 120
-            });
-            this.sfDataGridProperties.Columns.Add(new Syncfusion.WinForms.DataGrid.GridTextColumn()
-            {
-                MappingName = "PropertyValue",
-                HeaderText = "Value",
-                Width = 170
-            });
             // 
             // gradientPanel1
             // 
@@ -232,6 +290,7 @@ namespace WindowsFormsExplorer.UI.Forms
             this.btnConnect.TabIndex = 0;
             this.btnConnect.Text = "  Connect";
             this.btnConnect.TextImageRelation = System.Windows.Forms.TextImageRelation.ImageBeforeText;
+            this.btnConnect.ThemeName = "Office2016Colorful";
             this.btnConnect.UseVisualStyle = false;
             this.btnConnect.Click += new System.EventHandler(this.btnConnect_Click);
             // 
@@ -251,6 +310,7 @@ namespace WindowsFormsExplorer.UI.Forms
             this.btnRefresh.TabIndex = 1;
             this.btnRefresh.Text = "  Refresh";
             this.btnRefresh.TextImageRelation = System.Windows.Forms.TextImageRelation.ImageBeforeText;
+            this.btnRefresh.ThemeName = "Office2016Colorful";
             this.btnRefresh.UseVisualStyle = false;
             this.btnRefresh.Click += new System.EventHandler(this.btnRefresh_Click);
             // 
@@ -264,16 +324,16 @@ namespace WindowsFormsExplorer.UI.Forms
             this.Icon = ((System.Drawing.Icon)(resources.GetObject("$this.Icon")));
             this.Name = "MainForm";
             this.StartPosition = System.Windows.Forms.FormStartPosition.CenterScreen;
-            this.Text = "Form Inspector - Optimized (Syncfusion)";
+            this.Text = "Form Inspector";
             this.splitContainer.Panel1.ResumeLayout(false);
             this.splitContainer.Panel2.ResumeLayout(false);
             ((System.ComponentModel.ISupportInitialize)(this.splitContainer)).EndInit();
             this.splitContainer.ResumeLayout(false);
+            ((System.ComponentModel.ISupportInitialize)(this.sfDataGrid1)).EndInit();
             this.splitContainerRight.Panel1.ResumeLayout(false);
             this.splitContainerRight.Panel2.ResumeLayout(false);
             ((System.ComponentModel.ISupportInitialize)(this.splitContainerRight)).EndInit();
             this.splitContainerRight.ResumeLayout(false);
-            ((System.ComponentModel.ISupportInitialize)(this.sfDataGrid1)).EndInit();
             ((System.ComponentModel.ISupportInitialize)(this.treeViewAdv1)).EndInit();
             ((System.ComponentModel.ISupportInitialize)(this.propertyPanel)).EndInit();
             this.propertyPanel.ResumeLayout(false);
@@ -281,6 +341,7 @@ namespace WindowsFormsExplorer.UI.Forms
             ((System.ComponentModel.ISupportInitialize)(this.gradientPanel1)).EndInit();
             this.gradientPanel1.ResumeLayout(false);
             this.ResumeLayout(false);
+
         }
 
         #endregion
