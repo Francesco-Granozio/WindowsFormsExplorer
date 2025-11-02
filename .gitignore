@@ -20,7 +20,11 @@ mono_crash.*
 [Dd]ebug/
 [Dd]ebugPublic/
 [Rr]elease/
-[Rr]eleases/
+# Releases folder - ignora i binari ma mantieni i file di documentazione
+[Rr]eleases/**
+!Releases/
+!Releases/**/*.md
+!Releases/.gitkeep
 x64/
 x86/
 [Ww][Ii][Nn]32/
